@@ -384,7 +384,7 @@ test("starts with a linked complementary palette and a dependency-free seed pick
 
   const hex = dialog.getByRole("textbox", { name: "Hex" });
   await hex.fill("invalid");
-  await dialog.getByRole("slider", { name: "Hue" }).click();
+  await dialog.getByRole("slider", { name: "Hue" }).focus();
   await expect(hex).toHaveValue("invalid");
   await expect(hex).toHaveAttribute("aria-invalid", "true");
   const hexErrorId = await hex.getAttribute("aria-describedby");
