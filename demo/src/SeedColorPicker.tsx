@@ -119,7 +119,20 @@ export function SeedColorPicker({
     const ownerWindow = ownerDocument.defaultView ?? window;
 
     const frame = ownerWindow.requestAnimationFrame(() => {
-      planeRef.current?.focus();
+      const activeElement = ownerDocument.activeElement;
+      const root = rootRef.current;
+
+      // Do not steal focus when the user has already moved into another
+      // control before the scheduled initial-focus frame runs.
+      if (
+        root === null ||
+        activeElement === null ||
+        activeElement === ownerDocument.body ||
+        activeElement === triggerRef.current ||
+        !root.contains(activeElement)
+      ) {
+        planeRef.current?.focus();
+      }
     });
 
     const handleOutsideInteraction = (event: Event): void => {

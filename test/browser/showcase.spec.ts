@@ -1050,6 +1050,7 @@ test("exports the live palette as JSON, CSS, and design tokens", async ({ page }
   });
   await seed.fill("#3366ff");
   await seed.press("Enter");
+  await expect(page.getByRole("button", { name: /Base color: #3366FF/ })).toBeVisible();
   await page.keyboard.press("Escape");
 
   const tablist = page.getByRole("tablist", { name: "Export format" });
