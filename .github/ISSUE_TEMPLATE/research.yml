@@ -1,0 +1,33 @@
+name: Research proposal
+description: Propose a research source, algorithm, diagnostic, or conformance fixture.
+title: "[Research]: "
+labels: [research, triage]
+body:
+  - type: textarea
+    id: claim
+    attributes:
+      label: Claim or question
+      description: State the precise claim Colorwheel should evaluate.
+    validations:
+      required: true
+  - type: textarea
+    id: sources
+    attributes:
+      label: Primary sources
+      description: Link standards, peer-reviewed papers, or original datasets and include stable identifiers where possible.
+    validations:
+      required: true
+  - type: textarea
+    id: application
+    attributes:
+      label: Proposed application
+      description: Explain whether this affects generation, analysis, documentation, or a test fixture.
+    validations:
+      required: true
+  - type: textarea
+    id: limits
+    attributes:
+      label: Known limits
+      description: Note context, population, medium, color space, or replication limits.
+    validations:
+      required: true

@@ -1,0 +1,59 @@
+name: Bug report
+description: Report a reproducible problem in Colorwheel.
+title: "[Bug]: "
+labels: [bug, triage]
+body:
+  - type: markdown
+    attributes:
+      value: Thanks for helping improve Colorwheel. Please remove private data from examples.
+  - type: dropdown
+    id: surface
+    attributes:
+      label: Affected surface
+      options:
+        - Core color engine
+        - Headless editor
+        - React adapter
+        - Vue adapter
+        - Angular adapter
+        - React Native adapter
+        - Browser DOM adapter
+        - Demo or documentation
+        - Packaging or release
+    validations:
+      required: true
+  - type: textarea
+    id: reproduction
+    attributes:
+      label: Minimal reproduction
+      description: Link a repository or provide the smallest code and palette that reproduces the problem.
+    validations:
+      required: true
+  - type: textarea
+    id: expected
+    attributes:
+      label: Expected behavior
+    validations:
+      required: true
+  - type: textarea
+    id: actual
+    attributes:
+      label: Actual behavior
+    validations:
+      required: true
+  - type: textarea
+    id: environment
+    attributes:
+      label: Environment
+      description: Include Colorwheel version, browser/runtime, operating system, framework, and device or input method where relevant.
+    validations:
+      required: true
+  - type: checkboxes
+    id: checks
+    attributes:
+      label: Checks
+      options:
+        - label: I searched for an existing issue.
+          required: true
+        - label: I tested the latest released version or current main branch.
+          required: true

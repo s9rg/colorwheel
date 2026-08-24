@@ -1,0 +1,266 @@
+.relationship-picker {
+  --relationship-surface: #080d14;
+  --relationship-surface-raised: #121a26;
+  --relationship-surface-hover: #182231;
+  --relationship-border: rgb(232 238 248 / 16%);
+  --relationship-border-strong: rgb(232 238 248 / 28%);
+  --relationship-text: #f3f6fb;
+  --relationship-muted: #9aa8bb;
+  --relationship-acid: #dbff67;
+  --relationship-cyan: #55e6d2;
+
+  position: relative;
+  flex: none;
+  color: var(--relationship-text);
+  font:
+    650 0.75rem/1.2 Manrope,
+    ui-sans-serif,
+    system-ui,
+    sans-serif;
+}
+
+.relationship-picker button {
+  font: inherit;
+}
+
+.relationship-picker__trigger {
+  display: grid;
+  width: 13.1rem;
+  min-height: 2.75rem;
+  align-items: center;
+  grid-template-columns: 1.65rem minmax(0, 1fr) 0.9rem;
+  gap: 0.55rem;
+  padding: 0.3rem 0.62rem 0.3rem 0.42rem;
+  border: 1px solid var(--relationship-border);
+  border-radius: 0.75rem;
+  background: var(--relationship-surface);
+  color: var(--relationship-text);
+  cursor: pointer;
+  text-align: left;
+  transition:
+    border-color 150ms ease,
+    background-color 150ms ease,
+    box-shadow 150ms ease;
+}
+
+.relationship-picker__trigger:hover,
+.relationship-picker__trigger[aria-expanded="true"] {
+  border-color: var(--relationship-border-strong);
+  background: #0c121b;
+}
+
+.relationship-picker__trigger:focus-visible {
+  outline: 0;
+  border-color: var(--relationship-acid);
+  box-shadow: 0 0 0 3px rgb(219 255 103 / 15%);
+}
+
+.relationship-picker__trigger-copy,
+.relationship-picker__option-copy {
+  display: grid;
+  min-width: 0;
+}
+
+.relationship-picker__trigger-copy small {
+  color: var(--relationship-muted);
+  font-size: 0.5rem;
+  font-weight: 800;
+  letter-spacing: 0.09em;
+  line-height: 1;
+  text-transform: uppercase;
+}
+
+.relationship-picker__trigger-copy strong {
+  overflow: hidden;
+  margin-top: 0.2rem;
+  font-size: 0.72rem;
+  font-weight: 800;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.relationship-picker__chevron {
+  display: grid;
+  width: 0.9rem;
+  height: 0.9rem;
+  color: var(--relationship-muted);
+  transition: transform 150ms ease;
+}
+
+.relationship-picker__trigger[aria-expanded="true"] .relationship-picker__chevron {
+  transform: rotate(180deg);
+}
+
+.relationship-picker__chevron svg,
+.relationship-picker__selected svg {
+  width: 100%;
+  height: 100%;
+  fill: none;
+  stroke: currentColor;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+  stroke-width: 1.7;
+}
+
+.relationship-glyph {
+  display: block;
+  width: 1.65rem;
+  height: 1.65rem;
+  overflow: visible;
+}
+
+.relationship-glyph__ring {
+  fill: #0e1621;
+  stroke: rgb(224 232 244 / 25%);
+  stroke-width: 1;
+}
+
+.relationship-glyph__dot {
+  fill: var(--relationship-cyan);
+  stroke: #081018;
+  stroke-width: 1.1;
+}
+
+.relationship-glyph__dot--base {
+  fill: var(--relationship-acid);
+}
+
+.relationship-glyph__tone {
+  fill: color-mix(in srgb, var(--relationship-cyan) 45%, #172231);
+}
+
+.relationship-glyph__tone--base {
+  fill: var(--relationship-acid);
+}
+
+.relationship-picker__popover {
+  position: absolute;
+  z-index: 80;
+  inset-block-start: calc(100% + 0.65rem);
+  inset-inline-end: 0;
+  width: min(30rem, calc(100vw - 2rem));
+  padding: 0.7rem;
+  border: 1px solid var(--relationship-border-strong);
+  border-radius: 1rem;
+  background: #0f1722;
+  box-shadow:
+    0 2rem 5rem rgb(0 0 0 / 52%),
+    0 0 0 1px rgb(0 0 0 / 22%);
+}
+
+.relationship-picker__header {
+  display: grid;
+  gap: 0.2rem;
+  padding: 0.3rem 0.4rem 0.72rem;
+  border-bottom: 1px solid var(--relationship-border);
+}
+
+.relationship-picker__header strong {
+  font-size: 0.78rem;
+  font-weight: 800;
+}
+
+.relationship-picker__header span {
+  color: var(--relationship-muted);
+  font-size: 0.65rem;
+  font-weight: 550;
+}
+
+.relationship-picker__list {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 0.35rem;
+  padding-top: 0.55rem;
+}
+
+.relationship-picker__option {
+  display: grid;
+  min-width: 0;
+  min-height: 4rem;
+  align-items: center;
+  grid-template-columns: 2.25rem minmax(0, 1fr) 1rem;
+  gap: 0.55rem;
+  padding: 0.52rem 0.58rem;
+  border: 1px solid transparent;
+  border-radius: 0.78rem;
+  background: transparent;
+  color: var(--relationship-text);
+  cursor: pointer;
+  text-align: left;
+}
+
+.relationship-picker__option:hover,
+.relationship-picker__option:focus-visible,
+.relationship-picker__option[data-active] {
+  outline: 0;
+  border-color: var(--relationship-border);
+  background: var(--relationship-surface-hover);
+}
+
+.relationship-picker__option[aria-selected="true"] {
+  border-color: rgb(219 255 103 / 38%);
+  background: linear-gradient(135deg, rgb(219 255 103 / 10%), rgb(85 230 210 / 7%));
+}
+
+.relationship-picker__option .relationship-glyph {
+  width: 2.15rem;
+  height: 2.15rem;
+}
+
+.relationship-picker__option-copy {
+  gap: 0.2rem;
+}
+
+.relationship-picker__option-copy strong {
+  font-size: 0.74rem;
+  font-weight: 800;
+}
+
+.relationship-picker__option-copy small {
+  overflow: hidden;
+  color: var(--relationship-muted);
+  font-size: 0.61rem;
+  font-weight: 550;
+  line-height: 1.25;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.relationship-picker__selected {
+  display: grid;
+  width: 0.95rem;
+  height: 0.95rem;
+  place-items: center;
+  color: var(--relationship-acid);
+}
+
+@media (max-width: 46rem) {
+  .relationship-picker {
+    flex: 1 1 11rem;
+  }
+
+  .relationship-picker__trigger {
+    width: 100%;
+  }
+}
+
+@media (max-width: 30rem) {
+  .relationship-picker__popover {
+    position: fixed;
+    inset: auto 1rem 1rem;
+    width: auto;
+    max-height: calc(100dvh - 2rem);
+    overflow-y: auto;
+  }
+
+  .relationship-picker__list {
+    grid-template-columns: minmax(0, 1fr);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .relationship-picker__trigger,
+  .relationship-picker__chevron {
+    transition: none;
+  }
+}

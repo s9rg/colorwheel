@@ -1,0 +1,46 @@
+name: Feature request
+description: Propose a capability or customization seam.
+title: "[Feature]: "
+labels: [enhancement, triage]
+body:
+  - type: dropdown
+    id: scope
+    attributes:
+      label: Proposed scope
+      options:
+        - Framework-neutral core
+        - Headless editor
+        - React adapter
+        - Vue adapter
+        - Angular adapter
+        - React Native adapter
+        - Browser DOM adapter
+        - Future adapter
+        - Documentation or demo
+    validations:
+      required: true
+  - type: textarea
+    id: problem
+    attributes:
+      label: Problem to solve
+      description: Describe the user need before describing an API.
+    validations:
+      required: true
+  - type: textarea
+    id: proposal
+    attributes:
+      label: Proposed behavior or API
+    validations:
+      required: true
+  - type: textarea
+    id: customization
+    attributes:
+      label: Customization and portability
+      description: Explain how this behaves with custom palettes, headless use, and other framework adapters.
+  - type: checkboxes
+    id: checks
+    attributes:
+      label: Checks
+      options:
+        - label: I searched for an existing issue or RFC discussion.
+          required: true

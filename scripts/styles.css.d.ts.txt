@@ -1,0 +1,2 @@
+/** Type-only marker for the package's side-effect stylesheet export. */
+export {};

@@ -1,0 +1,17 @@
+{
+  "extends": "../../tsconfig.json",
+  "compilerOptions": {
+    "experimentalDecorators": true,
+    "noEmit": true
+  },
+  "include": [
+    "../../src/core/**/*.ts",
+    "../../src/editor/**/*.ts",
+    "../../src/angular/**/*.ts",
+    "./**/*.ts"
+  ],
+  "angularCompilerOptions": {
+    "compilationMode": "partial",
+    "strictTemplates": true
+  }
+}

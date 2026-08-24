@@ -1,0 +1,285 @@
+{
+  "name": "@s9rg/colorwheel",
+  "version": "1.0.0",
+  "description": "A research-informed, customization-first color wheel and palette toolkit",
+  "type": "module",
+  "main": "./dist/index.cjs",
+  "module": "./dist/index.js",
+  "types": "./dist/index.d.ts",
+  "exports": {
+    ".": {
+      "import": {
+        "types": "./dist/index.d.ts",
+        "default": "./dist/index.js"
+      },
+      "require": {
+        "types": "./dist/index.d.cts",
+        "default": "./dist/index.cjs"
+      }
+    },
+    "./core": {
+      "import": {
+        "types": "./dist/core/index.d.ts",
+        "default": "./dist/core/index.js"
+      },
+      "require": {
+        "types": "./dist/core/index.d.cts",
+        "default": "./dist/core/index.cjs"
+      }
+    },
+    "./editor": {
+      "import": {
+        "types": "./dist/editor/index.d.ts",
+        "default": "./dist/editor/index.js"
+      },
+      "require": {
+        "types": "./dist/editor/index.d.cts",
+        "default": "./dist/editor/index.cjs"
+      }
+    },
+    "./react": {
+      "import": {
+        "types": "./dist/react/index.d.ts",
+        "default": "./dist/react/index.js"
+      },
+      "require": {
+        "types": "./dist/react/index.d.cts",
+        "default": "./dist/react/index.cjs"
+      }
+    },
+    "./vue": {
+      "import": {
+        "types": "./dist/vue/index.d.ts",
+        "default": "./dist/vue/index.js"
+      },
+      "require": {
+        "types": "./dist/vue/index.d.cts",
+        "default": "./dist/vue/index.cjs"
+      }
+    },
+    "./angular": {
+      "types": "./dist/angular/index.d.ts",
+      "default": "./dist/angular/index.js"
+    },
+    "./react-native": {
+      "import": {
+        "types": "./dist/react-native/index.d.ts",
+        "default": "./dist/react-native/index.js"
+      },
+      "require": {
+        "types": "./dist/react-native/index.d.cts",
+        "default": "./dist/react-native/index.cjs"
+      }
+    },
+    "./dom": {
+      "import": {
+        "types": "./dist/dom/index.d.ts",
+        "default": "./dist/dom/index.js"
+      },
+      "require": {
+        "types": "./dist/dom/index.d.cts",
+        "default": "./dist/dom/index.cjs"
+      }
+    },
+    "./vanilla": {
+      "import": {
+        "types": "./dist/dom/index.d.ts",
+        "default": "./dist/dom/index.js"
+      },
+      "require": {
+        "types": "./dist/dom/index.d.cts",
+        "default": "./dist/dom/index.cjs"
+      }
+    },
+    "./styles.css": {
+      "types": "./dist/styles.css.d.ts",
+      "default": "./dist/styles.css"
+    },
+    "./package.json": "./package.json"
+  },
+  "files": [
+    "dist",
+    "README.md",
+    "CHANGELOG.md",
+    "LICENSE",
+    "CONTRIBUTING.md",
+    "CODE_OF_CONDUCT.md",
+    "SECURITY.md",
+    "docs/API.md",
+    "docs/CUSTOMIZATION.md",
+    "docs/PLAN.md",
+    "docs/RELEASE_CHECKLIST.md",
+    "docs/RESEARCH.md",
+    "docs/RFC-0001-public-api.md"
+  ],
+  "sideEffects": [
+    "**/*.css"
+  ],
+  "packageManager": "npm@10.9.2",
+  "scripts": {
+    "dev": "vite --config demo/vite.config.ts",
+    "build": "npm run build:lib && npm run build:demo",
+    "build:lib": "npm run build:lib:javascript && npm run build:lib:angular && node scripts/copy-styles.mjs",
+    "build:lib:javascript": "tsup",
+    "build:lib:angular": "node scripts/build-angular.mjs",
+    "build:demo": "vite build --config demo/vite.config.ts",
+    "preview": "vite preview --config demo/vite.config.ts",
+    "typecheck": "npm run typecheck:portable && tsc --noEmit && npm run typecheck:angular",
+    "typecheck:angular": "ngc --project test/angular/tsconfig.json",
+    "typecheck:portable": "tsc --project tsconfig.portable.json --noEmit",
+    "lint": "eslint . --max-warnings 0",
+    "format": "prettier --write .",
+    "format:check": "prettier --check .",
+    "test": "npm run test:unit",
+    "test:unit": "vitest run",
+    "test:coverage": "vitest run --coverage",
+    "test:watch": "vitest",
+    "test:browser": "playwright test",
+    "test:browser:headed": "playwright test --headed",
+    "size": "size-limit",
+    "test:package": "npm run build:lib && publint --strict && attw --pack . --profile node16 --entrypoints . ./core ./editor ./react ./vue ./react-native ./dom ./vanilla && attw --pack . --profile esm-only --entrypoints ./angular && node scripts/verify-package.mjs",
+    "check:clean": "node scripts/check-clean-room.mjs",
+    "check:static": "npm run format:check && npm run lint && npm run typecheck && npm run check:clean",
+    "check": "npm run check:static && npm run test:coverage && npm run build && npm run size",
+    "check:release": "npm run check && npm run test:browser && npm run test:package",
+    "prepublishOnly": "npm run check:release"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/s9rg/colorwheel.git"
+  },
+  "bugs": {
+    "url": "https://github.com/s9rg/colorwheel/issues"
+  },
+  "homepage": "https://s9rg.github.io/colorwheel/",
+  "keywords": [
+    "react",
+    "color-wheel",
+    "color-picker",
+    "palette",
+    "color-palette",
+    "color-harmony",
+    "oklch",
+    "accessible",
+    "typescript"
+  ],
+  "author": "Sergii Petryk",
+  "license": "MIT",
+  "publishConfig": {
+    "access": "public",
+    "registry": "https://registry.npmjs.org/"
+  },
+  "engines": {
+    "node": ">=20.19"
+  },
+  "peerDependencies": {
+    "@angular/core": "^21.0.0",
+    "react": "^18.2.0 || ^19.0.0",
+    "react-dom": "^18.2.0 || ^19.0.0",
+    "react-native": ">=0.76.0 <1",
+    "react-native-svg": "^15.8.0",
+    "vue": "^3.3.0"
+  },
+  "peerDependenciesMeta": {
+    "@angular/core": {
+      "optional": true
+    },
+    "react": {
+      "optional": true
+    },
+    "react-dom": {
+      "optional": true
+    },
+    "react-native": {
+      "optional": true
+    },
+    "react-native-svg": {
+      "optional": true
+    },
+    "vue": {
+      "optional": true
+    }
+  },
+  "devDependencies": {
+    "@angular/common": "^21.2.21",
+    "@angular/compiler": "^21.2.21",
+    "@angular/compiler-cli": "^21.2.21",
+    "@angular/core": "^21.2.21",
+    "@angular/platform-browser": "^21.2.21",
+    "@arethetypeswrong/cli": "^0.18.5",
+    "@axe-core/playwright": "^4.13.0",
+    "@babel/core": "^7.29.7",
+    "@eslint/js": "^10.0.0",
+    "@playwright/test": "^1.62.1",
+    "@size-limit/preset-small-lib": "^12.1.0",
+    "@testing-library/jest-dom": "^7.0.1",
+    "@testing-library/react": "^16.3.2",
+    "@testing-library/user-event": "^14.6.6",
+    "@types/node": "^22.0.0",
+    "@types/react": "^19.0.0",
+    "@types/react-dom": "^19.0.0",
+    "@vitejs/plugin-react": "^6.1.0",
+    "@vitest/coverage-v8": "^4.1.11",
+    "@vue/test-utils": "^2.4.11",
+    "eslint": "^10.9.0",
+    "eslint-plugin-react-hooks": "^7.1.1",
+    "eslint-plugin-react-refresh": "^0.5.4",
+    "fast-check": "^4.9.0",
+    "globals": "^16.0.0",
+    "jsdom": "^29.1.1",
+    "prettier": "^3.9.6",
+    "publint": "^0.3.24",
+    "react": "^19.2.8",
+    "react-dom": "^19.2.8",
+    "react-native": "^0.83.10",
+    "react-native-svg": "^15.15.5",
+    "rxjs": "^7.8.2",
+    "size-limit": "^12.1.0",
+    "tsup": "^8.5.1",
+    "typescript": "^6.0.3",
+    "typescript-eslint": "^8.67.0",
+    "vite": "^8.2.2",
+    "vitest": "^4.1.11",
+    "vue": "^3.5.41"
+  },
+  "overrides": {
+    "esbuild": "^0.28.1"
+  },
+  "size-limit": [
+    {
+      "name": "Core",
+      "path": "dist/core/index.js",
+      "limit": "13 kB"
+    },
+    {
+      "name": "Headless editor",
+      "path": "dist/editor/index.js",
+      "limit": "16 kB"
+    },
+    {
+      "name": "React adapter",
+      "path": "dist/react/index.js",
+      "limit": "26 kB"
+    },
+    {
+      "name": "DOM adapter",
+      "path": "dist/dom/index.js",
+      "limit": "22 kB"
+    },
+    {
+      "name": "Vue adapter",
+      "path": "dist/vue/index.js",
+      "limit": "23 kB"
+    },
+    {
+      "name": "Angular adapter",
+      "path": "dist/angular/index.js",
+      "limit": "24 kB"
+    },
+    {
+      "name": "React Native adapter",
+      "path": "dist/react-native/index.js",
+      "limit": "22 kB"
+    }
+  ]
+}

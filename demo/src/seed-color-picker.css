@@ -1,0 +1,415 @@
+.seed-color-picker {
+  --seed-picker-surface: var(--colorwheel-picker-surface, #ffffff);
+  --seed-picker-surface-raised: var(--colorwheel-picker-surface-raised, #f7f9fc);
+  --seed-picker-text: var(--colorwheel-picker-text, #172033);
+  --seed-picker-muted: var(--colorwheel-picker-muted, #617087);
+  --seed-picker-border: var(--colorwheel-picker-border, #d7deea);
+  --seed-picker-focus: var(--colorwheel-picker-focus, #635bff);
+  --seed-picker-shadow: var(
+    --colorwheel-picker-shadow,
+    0 20px 55px rgb(24 35 58 / 18%),
+    0 4px 14px rgb(24 35 58 / 10%)
+  );
+
+  position: relative;
+  display: inline-block;
+  color: var(--seed-picker-text);
+  font:
+    500 0.875rem/1.3 Inter,
+    ui-sans-serif,
+    system-ui,
+    -apple-system,
+    BlinkMacSystemFont,
+    "Segoe UI",
+    sans-serif;
+}
+
+.seed-color-picker button,
+.seed-color-picker input {
+  font: inherit;
+}
+
+.seed-color-picker__trigger {
+  display: inline-grid;
+  grid-template-columns: 1.65rem auto 1rem;
+  align-items: center;
+  gap: 0.55rem;
+  min-height: 2.65rem;
+  padding: 0.3rem 0.62rem 0.3rem 0.36rem;
+  color: var(--seed-picker-text);
+  background: var(--seed-picker-surface);
+  border: 1px solid var(--seed-picker-border);
+  border-radius: 0.7rem;
+  box-shadow: 0 1px 2px rgb(24 35 58 / 5%);
+  cursor: pointer;
+  transition:
+    border-color 140ms ease,
+    box-shadow 140ms ease,
+    transform 140ms ease;
+}
+
+.seed-color-picker__trigger:hover {
+  border-color: color-mix(in srgb, var(--seed-picker-focus) 42%, var(--seed-picker-border));
+  box-shadow: 0 3px 10px rgb(24 35 58 / 10%);
+}
+
+.seed-color-picker__trigger:active {
+  transform: translateY(1px);
+}
+
+.seed-color-picker__trigger:focus-visible,
+.seed-color-picker__close:focus-visible,
+.seed-color-picker__plane:focus-visible,
+.seed-color-picker input:focus-visible {
+  outline: 3px solid color-mix(in srgb, var(--seed-picker-focus) 25%, transparent);
+  outline-offset: 2px;
+}
+
+.seed-color-picker__trigger-swatch,
+.seed-color-picker__current-swatch {
+  display: block;
+  background: var(--seed-picker-current);
+  border: 1px solid rgb(16 24 40 / 16%);
+  box-shadow: inset 0 0 0 1px rgb(255 255 255 / 30%);
+}
+
+.seed-color-picker__trigger-swatch {
+  width: 1.65rem;
+  height: 1.65rem;
+  border-radius: 0.46rem;
+}
+
+.seed-color-picker__trigger-value {
+  min-width: 4.4rem;
+  font-family: "SFMono-Regular", Consolas, "Liberation Mono", monospace;
+  font-size: 0.79rem;
+  letter-spacing: 0.015em;
+}
+
+.seed-color-picker__chevron {
+  display: grid;
+  width: 1rem;
+  height: 1rem;
+  color: var(--seed-picker-muted);
+  transition: transform 140ms ease;
+}
+
+.seed-color-picker__trigger[aria-expanded="true"] .seed-color-picker__chevron {
+  transform: rotate(180deg);
+}
+
+.seed-color-picker__chevron svg,
+.seed-color-picker__close svg {
+  width: 100%;
+  height: 100%;
+  fill: none;
+  stroke: currentColor;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+  stroke-width: 1.7;
+}
+
+.seed-color-picker__popover {
+  position: absolute;
+  z-index: 50;
+  inset-block-start: calc(100% + 0.65rem);
+  inset-inline-start: 0;
+  width: min(20rem, calc(100vw - 2rem));
+  padding: 1rem;
+  color: var(--seed-picker-text);
+  background: var(--seed-picker-surface);
+  border: 1px solid var(--seed-picker-border);
+  border-radius: 1rem;
+  box-shadow: var(--seed-picker-shadow);
+  animation: seed-picker-enter 140ms ease-out;
+}
+
+.seed-color-picker__header {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 1rem;
+  margin-block-end: 0.85rem;
+}
+
+.seed-color-picker__header h3,
+.seed-color-picker__eyebrow,
+.seed-color-picker__error {
+  margin: 0;
+}
+
+.seed-color-picker__header h3 {
+  font-size: 0.97rem;
+  line-height: 1.2;
+}
+
+.seed-color-picker__eyebrow {
+  margin-block-end: 0.15rem;
+  color: var(--seed-picker-muted);
+  font-size: 0.68rem;
+  font-weight: 750;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+}
+
+.seed-color-picker__close {
+  display: grid;
+  place-items: center;
+  width: 2rem;
+  height: 2rem;
+  padding: 0.45rem;
+  color: var(--seed-picker-muted);
+  background: transparent;
+  border: 0;
+  border-radius: 0.55rem;
+  cursor: pointer;
+}
+
+.seed-color-picker__close:hover {
+  color: var(--seed-picker-text);
+  background: var(--seed-picker-surface-raised);
+}
+
+.seed-color-picker__plane {
+  position: relative;
+  width: 100%;
+  aspect-ratio: 1.72;
+  overflow: hidden;
+  background-color: var(--seed-picker-hue);
+  background-image:
+    linear-gradient(to top, #000000, transparent), linear-gradient(to right, #ffffff, transparent);
+  border: 1px solid rgb(15 23 42 / 16%);
+  border-radius: 0.72rem;
+  box-shadow: inset 0 0 0 1px rgb(255 255 255 / 10%);
+  cursor: crosshair;
+  touch-action: none;
+}
+
+.seed-color-picker__plane-thumb {
+  position: absolute;
+  width: 1.05rem;
+  height: 1.05rem;
+  background: var(--seed-picker-current);
+  border: 2px solid #ffffff;
+  border-radius: 50%;
+  box-shadow:
+    0 0 0 1px rgb(15 23 42 / 55%),
+    0 2px 5px rgb(15 23 42 / 32%);
+  pointer-events: none;
+  transform: translate(-50%, -50%);
+}
+
+.seed-color-picker__range {
+  display: grid;
+  gap: 0.38rem;
+  margin-block-start: 0.8rem;
+}
+
+.seed-color-picker__range > span {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 0.6rem;
+  color: var(--seed-picker-muted);
+  font-size: 0.72rem;
+  font-weight: 650;
+}
+
+.seed-color-picker__range output {
+  color: var(--seed-picker-text);
+  font-family: "SFMono-Regular", Consolas, "Liberation Mono", monospace;
+  font-size: 0.7rem;
+  font-weight: 600;
+}
+
+.seed-color-picker__range input[type="range"] {
+  width: 100%;
+  height: 0.9rem;
+  margin: 0;
+  padding: 0;
+  appearance: none;
+  background: transparent;
+  cursor: pointer;
+}
+
+.seed-color-picker__range input[type="range"]::-webkit-slider-runnable-track {
+  height: 0.5rem;
+  background: var(--seed-picker-track);
+  border: 1px solid rgb(15 23 42 / 12%);
+  border-radius: 999px;
+}
+
+.seed-color-picker__range input[type="range"]::-moz-range-track {
+  height: 0.5rem;
+  background: var(--seed-picker-track);
+  border: 1px solid rgb(15 23 42 / 12%);
+  border-radius: 999px;
+}
+
+.seed-color-picker__range input[type="range"]::-webkit-slider-thumb {
+  width: 0.95rem;
+  height: 0.95rem;
+  margin-block-start: -0.27rem;
+  appearance: none;
+  background: var(--seed-picker-thumb, var(--seed-picker-current));
+  border: 2px solid #ffffff;
+  border-radius: 50%;
+  box-shadow:
+    0 0 0 1px rgb(15 23 42 / 34%),
+    0 1px 3px rgb(15 23 42 / 22%);
+}
+
+.seed-color-picker__range input[type="range"]::-moz-range-thumb {
+  width: 0.75rem;
+  height: 0.75rem;
+  background: var(--seed-picker-thumb, var(--seed-picker-current));
+  border: 2px solid #ffffff;
+  border-radius: 50%;
+  box-shadow:
+    0 0 0 1px rgb(15 23 42 / 34%),
+    0 1px 3px rgb(15 23 42 / 22%);
+}
+
+.seed-color-picker__range--hue {
+  --seed-picker-track: linear-gradient(
+    90deg,
+    #ff0000 0%,
+    #ffff00 16.67%,
+    #00ff00 33.33%,
+    #00ffff 50%,
+    #0000ff 66.67%,
+    #ff00ff 83.33%,
+    #ff0000 100%
+  );
+  --seed-picker-thumb: var(--seed-picker-hue);
+}
+
+.seed-color-picker__range--saturation {
+  --seed-picker-track: linear-gradient(
+    90deg,
+    var(--seed-picker-saturation-start),
+    var(--seed-picker-saturation-end)
+  );
+}
+
+.seed-color-picker__range--value {
+  --seed-picker-track: linear-gradient(
+    90deg,
+    var(--seed-picker-value-start),
+    var(--seed-picker-value-end)
+  );
+}
+
+.seed-color-picker__channels {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 0.75rem;
+}
+
+.seed-color-picker__hex-row {
+  display: grid;
+  grid-template-columns: 2.6rem 1fr;
+  align-items: end;
+  gap: 0.7rem;
+  margin-block-start: 0.9rem;
+  padding-block-start: 0.9rem;
+  border-block-start: 1px solid var(--seed-picker-border);
+}
+
+.seed-color-picker__current-swatch {
+  width: 2.6rem;
+  height: 2.6rem;
+  border-radius: 0.62rem;
+}
+
+.seed-color-picker__hex-field {
+  display: grid;
+  gap: 0.3rem;
+  color: var(--seed-picker-muted);
+  font-size: 0.7rem;
+  font-weight: 650;
+}
+
+.seed-color-picker__hex-field input {
+  width: 100%;
+  min-width: 0;
+  height: 2.6rem;
+  padding: 0 0.75rem;
+  color: var(--seed-picker-text);
+  background: var(--seed-picker-surface-raised);
+  border: 1px solid var(--seed-picker-border);
+  border-radius: 0.62rem;
+  font-family: "SFMono-Regular", Consolas, "Liberation Mono", monospace;
+  font-size: 0.82rem;
+  letter-spacing: 0.025em;
+  text-transform: uppercase;
+}
+
+.seed-color-picker__hex-field input[aria-invalid="true"] {
+  border-color: #d92d20;
+}
+
+.seed-color-picker__error {
+  margin-block-start: 0.45rem;
+  color: #b42318;
+  font-size: 0.72rem;
+}
+
+.seed-color-picker__sr-only {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  padding: 0;
+  overflow: hidden;
+  clip: rect(0, 0, 0, 0);
+  white-space: nowrap;
+  border: 0;
+}
+
+@keyframes seed-picker-enter {
+  from {
+    opacity: 0;
+    transform: translateY(-0.3rem) scale(0.985);
+  }
+
+  to {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
+}
+
+@media (prefers-color-scheme: dark) {
+  .seed-color-picker {
+    --seed-picker-surface: var(--colorwheel-picker-surface, #151b28);
+    --seed-picker-surface-raised: var(--colorwheel-picker-surface-raised, #1e2636);
+    --seed-picker-text: var(--colorwheel-picker-text, #f4f7fb);
+    --seed-picker-muted: var(--colorwheel-picker-muted, #a7b2c4);
+    --seed-picker-border: var(--colorwheel-picker-border, #354054);
+    --seed-picker-shadow: var(
+      --colorwheel-picker-shadow,
+      0 24px 60px rgb(0 0 0 / 38%),
+      0 4px 16px rgb(0 0 0 / 28%)
+    );
+  }
+}
+
+@media (max-width: 30rem) {
+  .seed-color-picker__popover {
+    position: fixed;
+    inset: auto 1rem 1rem;
+    width: auto;
+    max-height: calc(100dvh - 2rem);
+    overflow-y: auto;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .seed-color-picker__popover {
+    animation: none;
+  }
+
+  .seed-color-picker__trigger,
+  .seed-color-picker__chevron {
+    transition: none;
+  }
+}
