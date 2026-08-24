@@ -5,9 +5,10 @@ published. Browser emulation and automated accessibility rules are useful
 signals; they do not replace testing with assistive technology and real touch
 hardware.
 
-Do not remove `private: true`, create a release tag, or publish to npm until
-every mandatory item is complete and its result is recorded below, unless the
-project owner records an explicit release exception.
+Do not create a release tag or publish to npm until every mandatory item is
+complete and its result is recorded below, unless the project owner records an
+explicit release exception. The package publication guard may be removed only
+after that approval and a green release candidate.
 
 Release exception recorded 2026-08-24: the project owner approved version
 1.0.0 for publication with the still-unavailable VoiceOver, TalkBack,
@@ -61,8 +62,9 @@ Local evidence recorded 2026-08-24 with Node 22.14.0 and npm 10.9.2:
 The integrated local suite passes with 294 unit/property/adapter tests, all
 coverage thresholds, all seven bundle budgets, 68 verified package files, and
 an approximately 1.52 MiB tarball. `npm audit --audit-level=moderate` reports
-zero vulnerabilities with the framework adapters integrated. The clean-checkout
-Node 20.19 and Node 22 matrix remains a CI gate after the repository is pushed.
+zero vulnerabilities with the framework adapters integrated. Clean-checkout
+Node 20.19, Node 22, and Node 24 checks are enforced by CI for `main` and every
+pull request targeting it.
 
 ## 3. Automated production-browser gates
 
@@ -141,19 +143,18 @@ These are mandatory. Simulator or Playwright device profiles do not count.
       templates, and pull-request template are present.
 - [x] Repository search finds no legacy project name, implementation, copied
       documentation, or prohibited dependency/reference.
-- [ ] Demo contains working links, correct metadata, and no claims that exceed
-      the evidence. Metadata and claims are verified locally; repository and
-      Pages links remain pending until the public repository exists.
+- [x] Demo contains working links, correct metadata, and no claims that exceed
+      the evidence.
 
 ## 7. GitHub repository and Pages
 
-- [ ] Create the public repository `s9rg/colorwheel` only after the local
+- [x] Create the public repository `s9rg/colorwheel` only after the local
       release candidate is green.
-- [ ] Push `main` and confirm required CI checks pass on GitHub.
-- [ ] Enable GitHub Pages through Actions.
-- [ ] Confirm <https://s9rg.github.io/colorwheel/> returns the deployed commit.
-- [ ] Repeat the production smoke journey against the public URL.
-- [ ] Check direct asset requests, cache behavior, social metadata, and the
+- [x] Push `main` and confirm required CI checks pass on GitHub.
+- [x] Enable GitHub Pages through Actions.
+- [x] Confirm <https://s9rg.github.io/colorwheel/> returns the deployed commit.
+- [x] Repeat the production smoke journey against the public URL.
+- [x] Check direct asset requests, cache behavior, social metadata, and the
       GitHub link.
 
 ## 8. npm publication ceremony
