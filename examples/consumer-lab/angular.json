@@ -1,0 +1,91 @@
+{
+  "$schema": "./node_modules/@angular/cli/lib/config/schema.json",
+  "version": 1,
+  "newProjectRoot": "projects",
+  "projects": {
+    "consumer-angular": {
+      "projectType": "application",
+      "root": "angular",
+      "sourceRoot": "angular/src",
+      "prefix": "consumer",
+      "architect": {
+        "build": {
+          "builder": "@angular/build:application",
+          "options": {
+            "outputPath": {
+              "base": "dist/angular",
+              "browser": ""
+            },
+            "index": "angular/index.html",
+            "browser": "angular/src/main.ts",
+            "tsConfig": "angular/tsconfig.app.json",
+            "styles": ["@s9rg/colorwheel/styles.css", "angular/src/styles.css"],
+            "assets": []
+          },
+          "configurations": {
+            "production": {
+              "baseHref": "/angular/",
+              "outputHashing": "all",
+              "budgets": [
+                {
+                  "type": "initial",
+                  "maximumWarning": "900kB",
+                  "maximumError": "1MB"
+                }
+              ]
+            },
+            "development": {
+              "baseHref": "/angular/",
+              "optimization": false,
+              "extractLicenses": false,
+              "sourceMap": true
+            },
+            "candidate-production": {
+              "browser": "angular/src/main.candidate.ts",
+              "tsConfig": "angular/tsconfig.candidate.json",
+              "baseHref": "/angular/",
+              "outputHashing": "all",
+              "budgets": [
+                {
+                  "type": "initial",
+                  "maximumWarning": "900kB",
+                  "maximumError": "1MB"
+                }
+              ]
+            },
+            "candidate-development": {
+              "browser": "angular/src/main.candidate.ts",
+              "tsConfig": "angular/tsconfig.candidate.json",
+              "baseHref": "/angular/",
+              "optimization": false,
+              "extractLicenses": false,
+              "sourceMap": true
+            }
+          },
+          "defaultConfiguration": "production"
+        },
+        "serve": {
+          "builder": "@angular/build:dev-server",
+          "options": {
+            "servePath": "/angular"
+          },
+          "configurations": {
+            "production": {
+              "buildTarget": "consumer-angular:build:production"
+            },
+            "development": {
+              "buildTarget": "consumer-angular:build:development"
+            },
+            "candidate-development": {
+              "buildTarget": "consumer-angular:build:candidate-development"
+            }
+          },
+          "defaultConfiguration": "development"
+        }
+      }
+    }
+  },
+  "cli": {
+    "analytics": false
+  }
+}

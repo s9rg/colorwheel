@@ -122,6 +122,80 @@ jobs:
       - run: npm ci
       - run: npm run test:package
 
+  consumer_lab:
+    name: Published package consumer lab (Node 24)
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    defaults:
+      run:
+        working-directory: examples/consumer-lab
+    steps:
+      - uses: actions/checkout@v7
+      - uses: actions/setup-node@v7
+        with:
+          node-version: "24"
+          cache: npm
+          cache-dependency-path: examples/consumer-lab/package-lock.json
+      - run: npm ci
+      - run: npx playwright install --with-deps chromium
+      - run: npm run check
+      - uses: actions/upload-artifact@v7
+        if: failure()
+        with:
+          name: consumer-lab-browser-results
+          path: |
+            examples/consumer-lab/playwright-report
+            examples/consumer-lab/test-results
+          if-no-files-found: ignore
+          retention-days: 7
+
+  angular_candidate:
+    name: Packed candidate Angular CLI runtime (Node 24)
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@v7
+      - uses: actions/setup-node@v7
+        with:
+          node-version: "24"
+          cache: npm
+          cache-dependency-path: |
+            package-lock.json
+            examples/consumer-lab/package-lock.json
+      - run: npm ci
+      - name: Build and pack release candidate
+        id: candidate
+        run: |
+          npm run build:lib
+          candidate_version="$(node --print "require('./package.json').version")"
+          candidate_filename="$(npm pack --ignore-scripts --pack-destination "$RUNNER_TEMP" --silent)"
+          test -f "$RUNNER_TEMP/$candidate_filename"
+          echo "version=$candidate_version" >> "$GITHUB_OUTPUT"
+          echo "tarball=$RUNNER_TEMP/$candidate_filename" >> "$GITHUB_OUTPUT"
+      - run: npm ci
+        working-directory: examples/consumer-lab
+      - name: Overlay packed candidate without changing the registry lockfile
+        env:
+          COLORWHEEL_CANDIDATE_TARBALL: ${{ steps.candidate.outputs.tarball }}
+        run: npm install --no-save --package-lock=false --ignore-scripts "$COLORWHEEL_CANDIDATE_TARBALL"
+        working-directory: examples/consumer-lab
+      - run: npx playwright install --with-deps chromium
+        working-directory: examples/consumer-lab
+      - name: Run Angular CLI candidate development and production gates
+        env:
+          COLORWHEEL_CANDIDATE_VERSION: ${{ steps.candidate.outputs.version }}
+        run: npm run check:angular:candidate
+        working-directory: examples/consumer-lab
+      - uses: actions/upload-artifact@v7
+        if: failure()
+        with:
+          name: angular-candidate-browser-results
+          path: |
+            examples/consumer-lab/playwright-report
+            examples/consumer-lab/test-results
+          if-no-files-found: ignore
+          retention-days: 7
+
   required:
     name: CI required
     if: always()
@@ -132,6 +206,8 @@ jobs:
       - build
       - browsers
       - package
+      - consumer_lab
+      - angular_candidate
     runs-on: ubuntu-latest
     timeout-minutes: 5
     permissions: {}
@@ -144,6 +220,8 @@ jobs:
           BUILD_RESULT: ${{ needs.build.result }}
           BROWSERS_RESULT: ${{ needs.browsers.result }}
           PACKAGE_RESULT: ${{ needs.package.result }}
+          CONSUMER_LAB_RESULT: ${{ needs.consumer_lab.result }}
+          ANGULAR_CANDIDATE_RESULT: ${{ needs.angular_candidate.result }}
         run: |
           test "$STATIC_RESULT" = "success"
           test "$UNIT_RESULT" = "success"
@@ -151,3 +229,5 @@ jobs:
           test "$BUILD_RESULT" = "success"
           test "$BROWSERS_RESULT" = "success"
           test "$PACKAGE_RESULT" = "success"
+          test "$CONSUMER_LAB_RESULT" = "success"
+          test "$ANGULAR_CANDIDATE_RESULT" = "success"

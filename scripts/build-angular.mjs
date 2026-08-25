@@ -39,11 +39,13 @@ async function copyAngularDeclarations() {
 
 async function assertPartialCompilation() {
   const output = await readFile(join(outputRoot, "index.js"), "utf8");
-  if (
-    !output.includes("\u0275\u0275ngDeclareComponent") &&
-    !output.includes("\\u0275\\u0275ngDeclareComponent")
-  ) {
-    throw new Error("Angular output is not partial-Ivy compiled");
+  if (!output.includes("\u0275\u0275ngDeclareComponent")) {
+    throw new Error(
+      "Angular output must contain literal partial-Ivy declarations for Angular CLI linker detection"
+    );
+  }
+  if (output.includes("\\u0275\\u0275ngDeclare")) {
+    throw new Error("Angular partial-Ivy declaration identifiers must not be ASCII escaped");
   }
 }
 

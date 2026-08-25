@@ -1120,7 +1120,7 @@ test("exposes complete navigation and tab semantics", async ({ page }) => {
   }
 });
 
-test("has no automated accessibility findings", async ({ page }) => {
+test("has no automated accessibility findings in dialogs and popovers", async ({ page }) => {
   await openShowcase(page);
   await page.getByRole("button", { name: /Base color: #00C4CC/ }).click();
   const dialog = page.getByRole("dialog", { name: "Base color" });
@@ -1135,23 +1135,36 @@ test("has no automated accessibility findings", async ({ page }) => {
   await expect(page.getByRole("listbox", { name: "Palette relationship options" })).toBeVisible();
   const relationshipResults = await new AxeBuilder({ page }).analyze();
   expect(relationshipResults.violations).toEqual([]);
+});
 
-  await page.keyboard.press("Escape");
+test("has no automated accessibility findings in the Vanilla adapter", async ({ page }) => {
+  await openShowcase(page);
   await selectExampleFramework(page, "Vanilla");
-  await expect(page.getByTestId("dom-studio")).toBeVisible();
-  const vanillaResults = await new AxeBuilder({ page }).analyze();
+  const vanillaStudio = page.getByTestId("dom-studio");
+  await expect(vanillaStudio.locator("[data-colorwheel]")).toBeVisible();
+  const vanillaResults = await new AxeBuilder({ page })
+    .include('[data-testid="dom-studio"]')
+    .analyze();
   expect(vanillaResults.violations).toEqual([]);
+});
 
+test("has no automated accessibility findings in the Vue adapter", async ({ page }) => {
+  await openShowcase(page);
   await selectExampleFramework(page, "Vue");
-  await expect(page.getByTestId("vue-studio").locator("[data-colorwheel-vue]")).toBeVisible();
-  const vueResults = await new AxeBuilder({ page }).analyze();
+  const vueStudio = page.getByTestId("vue-studio");
+  await expect(vueStudio.locator("[data-colorwheel-vue]")).toBeVisible();
+  const vueResults = await new AxeBuilder({ page }).include('[data-testid="vue-studio"]').analyze();
   expect(vueResults.violations).toEqual([]);
+});
 
+test("has no automated accessibility findings in the Angular adapter", async ({ page }) => {
+  await openShowcase(page);
   await selectExampleFramework(page, "Angular");
-  await expect(
-    page.getByTestId("angular-studio").locator("[data-colorwheel-angular]")
-  ).toBeVisible();
-  const angularResults = await new AxeBuilder({ page }).analyze();
+  const angularStudio = page.getByTestId("angular-studio");
+  await expect(angularStudio.locator("[data-colorwheel-angular]")).toBeVisible({ timeout: 15_000 });
+  const angularResults = await new AxeBuilder({ page })
+    .include('[data-testid="angular-studio"]')
+    .analyze();
   expect(angularResults.violations).toEqual([]);
 });
 

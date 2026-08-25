@@ -1,6 +1,14 @@
 dist/
 coverage/
 demo/dist/
+examples/consumer-lab/.angular/
+examples/consumer-lab/dist/
+examples/consumer-lab/dist-native/
+examples/consumer-lab/playwright-report/
+examples/consumer-lab/react-native/.artifacts/
+examples/consumer-lab/react-native/assets/
+examples/consumer-lab/react-native/main.jsbundle
+examples/consumer-lab/test-results/
 node_modules/
 playwright-report/
 test-results/

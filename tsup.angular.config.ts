@@ -11,5 +11,12 @@ export default defineConfig({
   clean: false,
   splitting: false,
   treeshake: true,
-  external: ["@angular/core"]
+  external: ["@angular/core"],
+  esbuildOptions(options) {
+    // Angular CLI's dependency prebundler uses the literal ɵɵngDeclare
+    // marker to decide whether a published library needs the Angular linker.
+    // esbuild's default ASCII charset escapes that identifier and prevents the
+    // linker from running in development builds.
+    options.charset = "utf8";
+  }
 });

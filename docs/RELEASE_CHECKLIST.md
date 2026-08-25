@@ -15,6 +15,11 @@ Release exception recorded 2026-08-24: the project owner approved version
 NVDA/JAWS, forced-colors, and physical-device gates left visibly open. Those
 items are deferred verification work and are not represented as passed.
 
+Patch-release exception recorded 2026-08-25: the project owner approved 1.0.1
+with the same deferred manual gates. The patch corrects Angular package linking
+and Vanilla focus targeting, and adds consumer acceptance coverage; it does not
+claim new physical-device or assistive-technology certification.
+
 ## 1. API and scope freeze
 
 - [x] Confirm the package name `@s9rg/colorwheel`.
@@ -58,13 +63,14 @@ npm run check:release
 - [x] `npm audit` reports no known production or development vulnerabilities,
       or each accepted exception is documented.
 
-Local evidence recorded 2026-08-24 with Node 22.14.0 and npm 10.9.2:
-The integrated local suite passes with 294 unit/property/adapter tests, all
-coverage thresholds, all seven bundle budgets, 68 verified package files, and
-an approximately 1.52 MiB tarball. `npm audit --audit-level=moderate` reports
-zero vulnerabilities with the framework adapters integrated. Clean-checkout
-Node 20.19, Node 22, and Node 24 checks are enforced by CI for `main` and every
-pull request targeting it.
+Local patch evidence recorded 2026-08-25 with Node 22.14.0 and npm 10.9.2:
+The integrated suite passes with 297 unit/property/adapter tests, all coverage
+thresholds, all seven bundle budgets, 68 verified package files, and the packed
+consumer matrix. The separate registry-backed lab passes eight development and
+eight production Chromium cases plus Angular AOT, Vue template, React Native
+type, contract, and Metro checks. `npm audit` reports zero vulnerabilities.
+Clean-checkout Node 20.19, Node 22, and Node 24 checks are enforced by CI for
+`main` and every pull request targeting it.
 
 ## 3. Automated production-browser gates
 
@@ -86,7 +92,7 @@ subpath: `/colorwheel/`.
 - [x] Screenshots have been inspected across every page section at desktop,
       phone, tablet, and 320 px widths—not merely generated.
 
-The production-path matrix contains 150 cases across six projects: 143 passed
+The production-path matrix contains 168 cases across six projects: 161 passed
 and seven were intentionally skipped where pointer dragging or the explicit
 320 px check would duplicate the relevant engine coverage. These results are
 emulated browser/device evidence, not physical-device sign-off.
@@ -179,11 +185,11 @@ These are mandatory. Simulator or Playwright device profiles do not count.
 ## Sign-off
 
 - Release candidate commit:
-- Proposed version: 1.0.0
+- Proposed version: 1.0.1
 - Automated gates completed by/date:
 - Desktop accessibility completed by/date:
 - iPhone testing completed by/date:
 - Android testing completed by/date:
 - GitHub Pages public smoke completed by/date:
-- npm publication approved by/date: project owner / 2026-08-24
+- npm publication approved by/date: project owner / 2026-08-25
 - Published package and integrity:

@@ -1,6 +1,6 @@
 {
   "name": "@s9rg/colorwheel",
-  "version": "1.0.0",
+  "version": "1.0.1",
   "description": "A research-informed, customization-first color wheel and palette toolkit",
   "type": "module",
   "main": "./dist/index.cjs",

@@ -787,6 +787,126 @@ describe("mountColorwheel", () => {
     instance.destroy();
   });
 
+  it("focuses the linked recipe anchor when its seed owner is not the first handle", () => {
+    const container = document.createElement("div");
+    document.body.append(container);
+    const generated = createHarmonyPalette({
+      seed: cyan,
+      harmony: { type: "analogous", count: 4, spread: 24 },
+      idFactory: (index) => `slot-${index + 1}`
+    });
+    const anchorColorId = generated.recipe?.seedColorId;
+    expect(anchorColorId).toBeDefined();
+    expect(anchorColorId).not.toBe(generated.colors[0]?.id);
+    const instance = mountColorwheel(container, { palette: generated });
+    const firstPointer = container.querySelector<HTMLButtonElement>(
+      '[data-part="pointer"]:first-of-type'
+    );
+    const anchorPointer = container.querySelector<HTMLButtonElement>(
+      `[data-part="pointer"][data-color-id="${anchorColorId}"]`
+    );
+    if (firstPointer === null || anchorPointer === null) throw new Error("Missing wheel pointer");
+
+    expect(firstPointer).toBeDisabled();
+    expect(anchorPointer).not.toBeDisabled();
+    instance.focus({ type: "wheel" });
+    expect(document.activeElement).toBe(anchorPointer);
+
+    instance.destroy();
+    container.remove();
+  });
+
+  it("prefers the free active handle and falls back through editable focus order", () => {
+    const container = document.createElement("div");
+    document.body.append(container);
+    const instance = mountColorwheel(container, {
+      state: createPickerState({
+        palette: palette(),
+        activeColorId: "green",
+        colorFocusOrder: ["blue", "green", "red"],
+        wheel: { interaction: "free" }
+      })
+    });
+
+    instance.focus({ type: "wheel" });
+    expect(document.activeElement).toBe(
+      container.querySelector('[data-part="pointer"][data-color-id="green"]')
+    );
+
+    instance.setState(
+      createPickerState({
+        palette: palette([
+          { ...entry("red", red, "Red"), locked: true },
+          entry("green", green, "Green"),
+          { ...entry("blue", blue, "Blue"), locked: true }
+        ]),
+        activeColorId: "red",
+        colorFocusOrder: ["red", "blue", "green"],
+        wheel: { interaction: "free" }
+      })
+    );
+    instance.focus({ type: "wheel" });
+    expect(document.activeElement).toBe(
+      container.querySelector('[data-part="pointer"][data-color-id="green"]')
+    );
+
+    instance.setState(
+      createPickerState({
+        palette: palette(),
+        activeColorId: undefined,
+        colorFocusOrder: ["blue", "green", "red"],
+        wheel: { interaction: "free" }
+      })
+    );
+    instance.focus({ type: "wheel" });
+    expect(document.activeElement).toBe(
+      container.querySelector('[data-part="pointer"][data-color-id="blue"]')
+    );
+
+    instance.destroy();
+    container.remove();
+  });
+
+  it("falls back to the root when no wheel handle is editable", () => {
+    const container = document.createElement("div");
+    const outside = document.createElement("button");
+    document.body.append(container, outside);
+    const allLocked = palette([
+      { ...entry("red", red, "Red"), locked: true },
+      { ...entry("green", green, "Green"), locked: true }
+    ]);
+    const instance = mountColorwheel(container, {
+      state: createPickerState({ palette: allLocked, wheel: { interaction: "free" } })
+    });
+
+    outside.focus();
+    instance.focus({ type: "wheel" });
+    expect(document.activeElement).toBe(instance.root);
+
+    const linked = createHarmonyPalette({
+      seed: cyan,
+      harmony: { type: "analogous", count: 4, spread: 24 }
+    });
+    const anchorColorId = linked.recipe?.seedColorId;
+    const lockedAnchor: Palette = {
+      ...linked,
+      colors: linked.colors.map((color) =>
+        color.id === anchorColorId ? { ...color, locked: true } : color
+      )
+    };
+    instance.setState(
+      createPickerState({ palette: lockedAnchor, wheel: { interaction: "linked" } })
+    );
+    outside.focus();
+    instance.focus({ type: "wheel" });
+    expect(document.activeElement).toBe(instance.root);
+    expect(container.querySelectorAll('[data-part="pointer"]:not(:disabled)')).toHaveLength(0);
+
+    instance.destroy();
+    container.remove();
+    outside.remove();
+  });
+
   it("preserves node identity and semantic focus through palette and channel updates", () => {
     const container = document.createElement("div");
     document.body.append(container);

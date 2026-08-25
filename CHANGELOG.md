@@ -2,6 +2,21 @@
 
 This file records user-visible changes. Dates use the ISO `YYYY-MM-DD` format.
 
+## 1.0.1 - 2026-08-25
+
+### Added
+
+- Added a registry-backed consumer lab for React, Vanilla, Vue, Angular, and
+  React Native, including AOT/template checks, development and production
+  browser journeys, responsive assertions, and a Metro production bundle.
+
+### Fixed
+
+- Preserved literal Angular partial-Ivy declaration markers so Angular CLI can
+  run its linker in development builds without loading the JIT compiler.
+- Made Vanilla `focus({ type: "wheel" })` target the editable roving wheel
+  handle and fall back to the picker root when no handle can receive focus.
+
 ## 1.0.0 - 2026-08-24
 
 ### Added

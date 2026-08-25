@@ -13,6 +13,8 @@ export default tseslint.config(
       ".angular-build",
       "coverage",
       "demo/dist",
+      // The published-package consumer lab has its own lockfile and CI gate.
+      "examples/consumer-lab",
       "playwright-report",
       "test-results",
       // These are compiled as external consumers against the packed tarball.

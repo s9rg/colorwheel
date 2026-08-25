@@ -170,6 +170,23 @@ function canEditColor<Metadata extends object>(
   return !entry.locked && (state.wheel.interaction === "free" || entry.id === state.anchorColorId);
 }
 
+/** Resolve the wheel's roving tab stop; callers fall back to the root when this returns undefined. */
+function resolveWheelFocusColorId<Metadata extends object>(
+  state: PickerState<Metadata>
+): string | undefined {
+  if (state.wheel.interaction === "linked") {
+    const anchor = state.palette.colors.find((entry) => entry.id === state.anchorColorId);
+    return anchor !== undefined && canEditColor(state, anchor) ? anchor.id : undefined;
+  }
+
+  const active = state.palette.colors.find((entry) => entry.id === state.activeColorId);
+  if (active !== undefined && canEditColor(state, active)) return active.id;
+  return state.colorFocusOrder.find((colorId) => {
+    const entry = state.palette.colors.find((candidate) => candidate.id === colorId);
+    return entry !== undefined && canEditColor(state, entry);
+  });
+}
+
 function colorCss(color: ColorValue): string {
   return formatColor(color, { format: "rgb", alpha: "auto" });
 }
@@ -680,14 +697,7 @@ function renderWheel<Metadata extends object>(
     surface.append(lines);
   }
 
-  const focusColorId = state.palette.colors.some(
-    (entry) => entry.id === state.activeColorId && canEditColor(state, entry)
-  )
-    ? state.activeColorId
-    : state.colorFocusOrder.find((colorId) => {
-        const entry = state.palette.colors.find((item) => item.id === colorId);
-        return entry !== undefined && canEditColor(state, entry);
-      });
+  const focusColorId = resolveWheelFocusColorId(state);
 
   points.forEach(({ entry, coordinates }) => {
     const handle = makeElement(ownerDocument, "button", "pointer");
@@ -1454,16 +1464,19 @@ export function mountColorwheel<Metadata extends object = JsonObject>(
         root.focus();
         return;
       }
+      if (target.type === "wheel") {
+        const colorId = resolveWheelFocusColorId(controller.getState());
+        (colorId === undefined ? root : (findPart("pointer", colorId) ?? root)).focus();
+        return;
+      }
       const element =
         target.type === "pointer"
           ? findPart("pointer", target.colorId)
           : target.type === "swatch"
             ? findPart("swatch", target.colorId)
-            : target.type === "wheel"
-              ? findPart("pointer")
-              : target.type === "palette"
-                ? findPart("swatch")
-                : findPart("channel-input", target.colorId, target.channel);
+            : target.type === "palette"
+              ? findPart("swatch")
+              : findPart("channel-input", target.colorId, target.channel);
       element?.focus();
     },
     destroy() {

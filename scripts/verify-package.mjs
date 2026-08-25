@@ -277,9 +277,13 @@ try {
 
   const angularOutput = await readFile(join(installedPackageRoot, "dist/angular/index.js"), "utf8");
   assert.ok(
-    angularOutput.includes("ɵɵngDeclareComponent") ||
-      angularOutput.includes("\\u0275\\u0275ngDeclareComponent"),
-    "Angular entry point must contain partial-Ivy declarations"
+    angularOutput.includes("ɵɵngDeclareComponent"),
+    "Angular entry point must contain literal partial-Ivy declarations for CLI linker detection"
+  );
+  assert.equal(
+    angularOutput.includes("\\u0275\\u0275ngDeclare"),
+    false,
+    "Angular partial-Ivy declaration identifiers must not be ASCII escaped"
   );
   const linkedAngular = await transformAsync(angularOutput, {
     babelrc: false,

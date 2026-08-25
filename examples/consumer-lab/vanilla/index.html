@@ -1,0 +1,81 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta name="color-scheme" content="dark" />
+    <meta name="theme-color" content="#0b1118" />
+    <title>Vanilla palette workbench · Colorwheel consumer lab</title>
+  </head>
+  <body>
+    <main class="vanilla-lab" data-test="vanilla-consumer-lab">
+      <header class="page-header">
+        <a href="../" class="back-link">Consumer lab</a>
+        <span class="eyebrow">Vanilla DOM · imperative lifecycle</span>
+        <div class="page-header__copy">
+          <h1>Campaign palette workbench</h1>
+          <p>
+            A no-framework integration that injects a caller-owned controller, updates presentation
+            and palette data, focuses editor targets, and proves adapter teardown does not destroy
+            application state.
+          </p>
+        </div>
+      </header>
+
+      <section class="lifecycle-panel" aria-labelledby="lifecycle-title">
+        <div>
+          <span class="eyebrow">ColorwheelInstance</span>
+          <h2 id="lifecycle-title">Runtime controls</h2>
+        </div>
+        <div class="button-row">
+          <button type="button" data-test="vanilla-mount">Mount</button>
+          <button type="button" data-test="vanilla-focus">Focus wheel</button>
+          <button type="button" data-test="vanilla-update-palette">Load launch palette</button>
+          <button type="button" data-test="vanilla-update-blocks">Use compact blocks</button>
+          <button type="button" class="danger-button" data-test="vanilla-destroy">Destroy</button>
+        </div>
+        <output class="lifecycle-status" aria-live="polite" data-test="vanilla-lifecycle-status">
+          Waiting to mount.
+        </output>
+      </section>
+
+      <div class="workbench-grid">
+        <section class="picker-card" aria-labelledby="picker-card-title">
+          <div class="section-heading">
+            <div>
+              <span class="eyebrow">Mounted view</span>
+              <h2 id="picker-card-title">Palette editor</h2>
+            </div>
+            <span class="status-dot" data-test="vanilla-instance-state">Stopped</span>
+          </div>
+          <div id="picker-host" data-test="vanilla-picker-host"></div>
+        </section>
+
+        <aside class="telemetry-column">
+          <section class="palette-summary" aria-labelledby="summary-title">
+            <span class="eyebrow">Live callback data</span>
+            <h2 id="summary-title">Current palette</h2>
+            <div id="palette-summary" data-test="vanilla-palette-summary">
+              No palette is mounted.
+            </div>
+          </section>
+
+          <section class="event-log" aria-labelledby="events-title">
+            <div class="section-heading">
+              <div>
+                <span class="eyebrow">onChange</span>
+                <h2 id="events-title">Event stream</h2>
+              </div>
+              <output id="event-count" aria-live="polite">0 events</output>
+            </div>
+            <ol id="event-list" data-test="vanilla-event-log">
+              <li class="empty-event">Interact with the mounted editor to inspect ChangeMeta.</li>
+            </ol>
+          </section>
+        </aside>
+      </div>
+    </main>
+
+    <script type="module" src="./src/main.ts"></script>
+  </body>
+</html>
