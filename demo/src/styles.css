@@ -1341,9 +1341,13 @@ a {
     font-size: 0.68rem;
   }
 
+  .nav-links {
+    gap: 0.35rem;
+  }
+
   .nav-links .github-link {
     min-height: 2.75rem;
-    padding-inline: 0.6rem;
+    padding-inline: 0.4rem;
   }
 
   .hero {

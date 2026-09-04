@@ -56,6 +56,14 @@ export default defineConfig({
           environment: "node",
           include: ["test/react-native/**/*.test.ts", "test/react-native/**/*.test.tsx"]
         }
+      },
+      {
+        extends: true,
+        test: {
+          name: "demo-theme-builder",
+          environment: "node",
+          include: ["test/demo/**/*.test.ts"]
+        }
       }
     ],
     coverage: {

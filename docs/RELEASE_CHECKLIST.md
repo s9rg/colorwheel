@@ -20,6 +20,13 @@ with the same deferred manual gates. The patch corrects Angular package linking
 and Vanilla focus targeting, and adds consumer acceptance coverage; it does not
 claim new physical-device or assistive-technology certification.
 
+Minor-release exception recorded 2026-09-04: the project owner approved 1.1.0
+with the same deferred physical-device and assistive-technology gates left
+visibly open. This release adds a demo-only theme-builder integration for 11
+targets; Colorwheel's public package runtime and API are unchanged, and the
+release does not claim new physical-device or assistive-technology
+certification.
+
 ## 1. API and scope freeze
 
 - [x] Confirm the package name `@s9rg/colorwheel`.
@@ -63,7 +70,7 @@ npm run check:release
 - [x] `npm audit` reports no known production or development vulnerabilities,
       or each accepted exception is documented.
 
-Local patch evidence recorded 2026-08-25 with Node 22.14.0 and npm 10.9.2:
+Local 1.0.1 patch evidence recorded 2026-08-25 with Node 22.14.0 and npm 10.9.2:
 The integrated suite passes with 297 unit/property/adapter tests, all coverage
 thresholds, all seven bundle budgets, 68 verified package files, and the packed
 consumer matrix. The separate registry-backed lab passes eight development and
@@ -71,6 +78,13 @@ eight production Chromium cases plus Angular AOT, Vue template, React Native
 type, contract, and Metro checks. `npm audit` reports zero vulnerabilities.
 Clean-checkout Node 20.19, Node 22, and Node 24 checks are enforced by CI for
 `main` and every pull request targeting it.
+
+Local 1.1.0 evidence recorded 2026-09-04 with Node 22.14.0 and npm 10.9.2:
+The integrated suite passes 315 unit/property/adapter/demo tests, all coverage
+thresholds, all seven package bundle budgets, 68 verified package files, strict
+package linting, and both type-resolution profiles. All 11 theme adapters
+compile successfully, the Pages build verifies their third-party notices, and
+`npm audit` reports zero vulnerabilities.
 
 ## 3. Automated production-browser gates
 
@@ -92,10 +106,15 @@ subpath: `/colorwheel/`.
 - [x] Screenshots have been inspected across every page section at desktop,
       phone, tablet, and 320 px widths—not merely generated.
 
-The production-path matrix contains 168 cases across six projects: 161 passed
-and seven were intentionally skipped where pointer dragging or the explicit
-320 px check would duplicate the relevant engine coverage. These results are
-emulated browser/device evidence, not physical-device sign-off.
+The 1.0.1 production-path matrix contained 168 cases across six projects: 161
+passed and seven were intentionally skipped where pointer dragging or the
+explicit 320 px check would duplicate the relevant engine coverage.
+
+The local 1.1.0 production-path matrix contains 198 cases across Chromium,
+Firefox, WebKit, phone, and tablet projects: 186 passed and 12 were
+intentionally skipped where the all-adapter matrix, pointer dragging, or the
+explicit 320 px check would duplicate the relevant engine coverage. These
+results are emulated browser/device evidence, not physical-device sign-off.
 
 ## 4. Manual desktop and assistive-technology gates
 
@@ -185,11 +204,11 @@ These are mandatory. Simulator or Playwright device profiles do not count.
 ## Sign-off
 
 - Release candidate commit:
-- Proposed version: 1.0.1
+- Proposed version: 1.1.0
 - Automated gates completed by/date:
 - Desktop accessibility completed by/date:
 - iPhone testing completed by/date:
 - Android testing completed by/date:
 - GitHub Pages public smoke completed by/date:
-- npm publication approved by/date: project owner / 2026-08-25
+- npm publication approved by/date: project owner / 2026-09-04
 - Published package and integrity:

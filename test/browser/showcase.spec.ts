@@ -1,6 +1,22 @@
+import { readFile, stat } from "node:fs/promises";
 import { expect, test } from "@playwright/test";
 import type { Locator, Page } from "@playwright/test";
 import AxeBuilder from "@axe-core/playwright";
+import { strFromU8, unzipSync } from "fflate";
+
+const THEME_TARGET_ARTIFACTS = [
+  ["css", "theme.css"],
+  ["tailwind", "theme.tailwind.css"],
+  ["mui", "theme.ts"],
+  ["dtcg", "theme.primitives.tokens.json"],
+  ["antd", "antd/theme.ts"],
+  ["shadcn", "shadcn/theme.json"],
+  ["daisyui", "daisyui/theme.css"],
+  ["vuetify", "vuetify.theme.ts"],
+  ["angular-material", "angular-material.theme.scss"],
+  ["ionic", "ionic.theme.css"],
+  ["react-native-paper", "react-native-paper/theme.ts"]
+] as const;
 
 async function openShowcase(page: Page): Promise<void> {
   await page.goto("./", { waitUntil: "networkidle" });
@@ -14,6 +30,20 @@ async function expectNoPageOverflow(page: Page): Promise<void> {
   }));
   expect(dimensions.document).toBeLessThanOrEqual(dimensions.viewport + 1);
   expect(dimensions.body).toBeLessThanOrEqual(dimensions.viewport + 1);
+}
+
+async function expectThemeCompilationReady(
+  themeSection: Locator,
+  expectedArtifact: string
+): Promise<void> {
+  const shell = themeSection.locator(".theme-builder-shell");
+  await expect(shell).toHaveAttribute("aria-busy", "false", { timeout: 20_000 });
+  await expect(themeSection.locator("#theme-builder-status")).toContainText("files ready");
+  const filePicker = themeSection.getByLabel("Generated file");
+  await expect(filePicker).toBeEnabled();
+  await expect(filePicker.locator(`option[value="${expectedArtifact}"]`)).toHaveCount(1);
+  await expect(filePicker.locator('option[value="theme.lock.json"]')).toHaveCount(1);
+  await expect(themeSection.getByTestId("theme-builder-output")).toBeVisible();
 }
 
 function frameworkTab(tablist: Locator, label: string): Locator {
@@ -1045,13 +1075,13 @@ test("exports the live palette as JSON, CSS, and design tokens", async ({ page }
   });
   await openShowcase(page);
   await page.getByRole("button", { name: /Base color: #00C4CC/ }).click();
-  const seed = page.getByRole("dialog", { name: "Base color" }).getByRole("textbox", {
-    name: "Hex"
-  });
+  const seedDialog = page.getByRole("dialog", { name: "Base color" });
+  const seed = seedDialog.getByRole("textbox", { name: "Hex" });
   await seed.fill("#3366ff");
   await seed.press("Enter");
   await expect(page.getByRole("button", { name: /Base color: #3366FF/ })).toBeVisible();
   await page.keyboard.press("Escape");
+  await expect(seedDialog).toBeHidden();
 
   const tablist = page.getByRole("tablist", { name: "Export format" });
   const panel = page.locator("#export-panel");
@@ -1089,12 +1119,150 @@ test("exports the live palette as JSON, CSS, and design tokens", async ({ page }
   expect((await downloadEvent).suggestedFilename()).toBe("palette.tokens.json");
 });
 
+test("builds, copies, and downloads the default CSS theme", async ({ page }) => {
+  await page.addInitScript(() => {
+    Object.defineProperty(navigator, "clipboard", {
+      configurable: true,
+      value: {
+        writeText(text: string) {
+          window.sessionStorage.setItem("theme-builder-copied", text);
+          return Promise.resolve();
+        }
+      }
+    });
+  });
+  await openShowcase(page);
+
+  const themeSection = page.locator("#themes");
+  await expect(
+    themeSection.getByRole("heading", { name: "Turn this palette into a UI theme." })
+  ).toBeVisible();
+  await expect(themeSection.getByLabel("Theme target")).toHaveValue("css");
+  await expectThemeCompilationReady(themeSection, "theme.css");
+
+  const output = themeSection.getByTestId("theme-builder-output");
+  await expect(output).toContainText("--theme-semantic-primary");
+
+  const copy = themeSection.getByRole("button", { name: "Copy code" });
+  await copy.click();
+  await expect(themeSection.locator(".theme-code-panel").getByRole("status")).toHaveText(
+    "theme.css copied."
+  );
+  expect(await page.evaluate(() => window.sessionStorage.getItem("theme-builder-copied"))).toBe(
+    await output.textContent()
+  );
+
+  const downloadEvent = page.waitForEvent("download");
+  await themeSection.getByRole("button", { name: "Download theme" }).click();
+  const download = await downloadEvent;
+  expect(download.suggestedFilename()).toBe("colorwheel-theme-css.zip");
+  const downloadPath = await download.path();
+  expect(downloadPath).not.toBeNull();
+  if (downloadPath === null) throw new Error("Playwright did not persist the downloaded ZIP.");
+  expect((await stat(downloadPath)).size).toBeGreaterThan(100);
+  const archive = unzipSync(new Uint8Array(await readFile(downloadPath)));
+  expect(Object.keys(archive).sort()).toEqual(["theme.css", "theme.lock.json"]);
+  for (const path of Object.keys(archive)) {
+    expect(path).not.toMatch(/(?:^\/|(?:^|\/)\.\.(?:\/|$))/);
+  }
+  expect(strFromU8(archive["theme.css"])).toContain("--theme-semantic-primary");
+});
+
+test("recompiles the CSS theme when the live palette seed changes", async ({ page }) => {
+  await openShowcase(page);
+  const themeSection = page.locator("#themes");
+  await expectThemeCompilationReady(themeSection, "theme.css");
+  const initialOutput = await themeSection.getByTestId("theme-builder-output").textContent();
+  expect(initialOutput).toContain("--theme-palette-brand-1: color(srgb 0 0.768627 0.8);");
+
+  await page.getByRole("button", { name: /Base color: #00C4CC/ }).click();
+  const dialog = page.getByRole("dialog", { name: "Base color" });
+  const seed = dialog.getByRole("textbox", { name: "Hex" });
+  await seed.fill("#3366ff");
+  await seed.press("Enter");
+  await expect(page.getByRole("button", { name: /Base color: #3366FF/ })).toBeVisible();
+  await page.keyboard.press("Escape");
+  await expect(dialog).toBeHidden();
+
+  await expectThemeCompilationReady(themeSection, "theme.css");
+  const updatedOutput = themeSection.getByTestId("theme-builder-output");
+  await expect(updatedOutput).toContainText("--theme-palette-brand-1: color(srgb 0.2 0.4 1);");
+  expect(await updatedOutput.textContent()).not.toBe(initialOutput);
+});
+
+test("compiles every theme target without retaining stale output", async ({ page }, testInfo) => {
+  test.skip(
+    testInfo.project.name !== "chromium",
+    "The complete adapter matrix is covered once in desktop Chromium."
+  );
+  await openShowcase(page);
+
+  const themeSection = page.locator("#themes");
+  const shell = themeSection.locator(".theme-builder-shell");
+  const targetPicker = themeSection.getByLabel("Theme target");
+  const targetOptions = await targetPicker.locator("option").all();
+  expect(await Promise.all(targetOptions.map((option) => option.getAttribute("value")))).toEqual(
+    THEME_TARGET_ARTIFACTS.map(([target]) => target)
+  );
+
+  await expectThemeCompilationReady(themeSection, THEME_TARGET_ARTIFACTS[0][1]);
+  await targetPicker.selectOption("angular-material");
+  await expect(shell).toHaveAttribute("aria-busy", "true");
+  await targetPicker.selectOption("css");
+  await expectThemeCompilationReady(themeSection, "theme.css");
+  await expect(
+    themeSection.getByLabel("Generated file").locator('option[value="angular-material.theme.scss"]')
+  ).toHaveCount(0);
+
+  for (const [target, expectedArtifact] of THEME_TARGET_ARTIFACTS.slice(1)) {
+    await targetPicker.selectOption(target);
+    await expect(shell).toHaveAttribute("aria-busy", "true");
+    await expect(themeSection.getByTestId("theme-builder-output")).toHaveCount(0);
+    await expectThemeCompilationReady(themeSection, expectedArtifact);
+
+    if (target === "dtcg") {
+      const filePicker = themeSection.getByLabel("Generated file");
+      await filePicker.selectOption("theme.resolver.json");
+      await expect(filePicker).toHaveValue("theme.resolver.json");
+      await expect(
+        themeSection.locator('pre[aria-label="Generated theme.resolver.json"]')
+      ).toBeVisible();
+      await expect(themeSection.getByTestId("theme-builder-output")).toContainText(
+        "https://www.designtokens.org/schemas/2025.10/resolver.json"
+      );
+    }
+  }
+});
+
+test("switches the product preview between computed light and dark colors", async ({ page }) => {
+  await openShowcase(page);
+  const themeSection = page.locator("#themes");
+  const scheme = themeSection.getByRole("group", { name: "Preview scheme" });
+  const preview = themeSection.locator(".theme-product-preview");
+
+  await expect(scheme.getByRole("button", { name: "Light" })).toHaveAttribute(
+    "aria-pressed",
+    "true"
+  );
+  await expect(preview).toHaveCSS("background-color", "rgb(248, 250, 254)");
+  await expect(preview).toHaveCSS("color", "rgb(19, 22, 31)");
+
+  await scheme.getByRole("button", { name: "Dark" }).click();
+  await expect(scheme.getByRole("button", { name: "Dark" })).toHaveAttribute(
+    "aria-pressed",
+    "true"
+  );
+  await expect(preview).toHaveCSS("background-color", "rgb(7, 9, 15)");
+  await expect(preview).toHaveCSS("color", "rgb(255, 255, 255)");
+});
+
 test("exposes complete navigation and tab semantics", async ({ page }) => {
   await openShowcase(page);
   const navigation = page.getByRole("navigation", { name: "Primary navigation" });
   for (const [label, target] of [
     ["Install", "#installation"],
     ["Examples", "#examples"],
+    ["Themes", "#themes"],
     ["API", "#api"],
     ["Export", "#export"]
   ] as const) {
@@ -1103,6 +1271,13 @@ test("exposes complete navigation and tab semantics", async ({ page }) => {
       target
     );
   }
+
+  await expect(
+    page.getByRole("navigation", { name: "Footer navigation" }).getByRole("link", {
+      name: "Notices",
+      exact: true
+    })
+  ).toHaveAttribute("href", "THIRD_PARTY_NOTICES.txt");
 
   await expect(page.getByRole("main")).toBeVisible();
   await expect(page.getByRole("contentinfo")).toBeVisible();
@@ -1166,6 +1341,14 @@ test("has no automated accessibility findings in the Angular adapter", async ({ 
     .include('[data-testid="angular-studio"]')
     .analyze();
   expect(angularResults.violations).toEqual([]);
+});
+
+test("has no automated accessibility findings in the theme builder", async ({ page }) => {
+  await openShowcase(page);
+  const themeSection = page.locator("#themes");
+  await expectThemeCompilationReady(themeSection, "theme.css");
+  const themeResults = await new AxeBuilder({ page }).include("#themes").analyze();
+  expect(themeResults.violations).toEqual([]);
 });
 
 test("exposes a complete manual accessibility test surface", async ({ page }) => {
@@ -1244,6 +1427,10 @@ test("does not overflow configured desktop, phone, or tablet viewports", async (
   await expectNoPageOverflow(page);
 
   await page.keyboard.press("Escape");
+  await page.locator("#themes").scrollIntoViewIfNeeded();
+  await expectThemeCompilationReady(page.locator("#themes"), "theme.css");
+  await expectNoPageOverflow(page);
+
   await page.locator("#export-panel").scrollIntoViewIfNeeded();
   await expect(
     page.getByRole("group", { name: "Export actions" }).getByRole("button", { name: "Copy output" })
@@ -1265,6 +1452,10 @@ test("fits the explicit 320px minimum viewport", async ({ page }, testInfo) => {
   await expect(page.getByTestId("default-studio")).toBeVisible();
   await selectExampleDisplay(page, "Code");
   await expect(page.getByTestId("example-code")).toBeVisible();
+  await expectNoPageOverflow(page);
+
+  await page.locator("#themes").scrollIntoViewIfNeeded();
+  await expectThemeCompilationReady(page.locator("#themes"), "theme.css");
   await expectNoPageOverflow(page);
 
   await selectExampleDisplay(page, "Preview");

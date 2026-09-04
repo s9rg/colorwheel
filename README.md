@@ -12,6 +12,12 @@ Each client renders natively for its platform over that shared controller:
 stable DOM for Vanilla, framework-owned trees for React, Vue, and Angular, and
 native views for React Native. The framework adapters do not embed one another.
 
+[Try the live demo](https://s9rg.github.io/colorwheel/) to edit a Colorwheel
+palette, preview light and dark themes, inspect generated code, and download a
+theme for 11 popular targets. Theme generation uses `@s9rg/theme-compiler`
+0.6.0 and its adapters in the demo only; they are not Colorwheel runtime
+dependencies.
+
 ## Features
 
 - Single, complementary, analogous, triadic, tetradic,
