@@ -2,6 +2,23 @@
 
 This file records user-visible changes. Dates use the ISO `YYYY-MM-DD` format.
 
+## 1.1.0 - 2026-09-04
+
+### Added
+
+- Added a live theme builder to the GitHub Pages demo. The current Colorwheel
+  palette can now compile into previewable, inspectable, and downloadable theme
+  files for DTCG, CSS custom properties, Tailwind CSS, MUI, Ant Design,
+  shadcn/ui, daisyUI, Vuetify, Angular Material, Ionic, and React Native Paper
+  through `@s9rg/theme-compiler` 0.6.0.
+- Added deterministic third-party notices for the demo's theme compiler and
+  adapters.
+
+### Changed
+
+- Kept the theme-builder integration demo-only. Version 1.1.0 does not change
+  Colorwheel's public package runtime, API, exports, or runtime dependencies.
+
 ## 1.0.1 - 2026-08-25
 
 ### Added

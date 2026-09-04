@@ -18,6 +18,7 @@ import { PaletteRelationshipPicker } from "./PaletteRelationshipPicker";
 import { SeedColorPicker } from "./SeedColorPicker";
 import { PALETTE_RELATIONSHIPS } from "./palette-relationships";
 import type { PaletteMode } from "./palette-relationships";
+import { ThemeBuilderSection } from "./theme-builder/ThemeBuilderSection";
 
 const REPOSITORY_URL = "https://github.com/s9rg/colorwheel";
 
@@ -601,6 +602,7 @@ function AppHeader() {
         <div className="nav-links">
           <a href="#installation">Install</a>
           <a href="#examples">Examples</a>
+          <a href="#themes">Themes</a>
           <a href="#api">API</a>
           <a href="#export">Export</a>
           <a className="github-link" href={REPOSITORY_URL}>
@@ -1255,8 +1257,10 @@ function Footer() {
       <nav aria-label="Footer navigation">
         <a href="#installation">Install</a>
         <a href="#examples">Examples</a>
+        <a href="#themes">Themes</a>
         <a href="#api">API</a>
         <a href="#export">Export</a>
+        <a href="THIRD_PARTY_NOTICES.txt">Notices</a>
         <a href={REPOSITORY_URL}>GitHub</a>
       </nav>
       <p>MIT © Sergii Petryk</p>
@@ -1343,6 +1347,7 @@ export function App() {
           palette={palette}
           onPaletteChange={setPalette}
         />
+        <ThemeBuilderSection palette={palette} />
         <ApiSection frameworkId={apiFrameworkId} onFrameworkChange={setApiFrameworkId} />
         <ExportSection palette={palette} />
       </main>
