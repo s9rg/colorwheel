@@ -23,6 +23,8 @@ This file records user-visible changes. Dates use the ISO `YYYY-MM-DD` format.
 - Preserved the demo seed picker's authored hue and saturation through black and
   gray, including hue changes made while the displayed color is achromatic.
 - Included the visible Anchor badge in swatch accessible names across web adapters.
+- Restored relationship-menu focus immediately so a delayed callback cannot steal
+  focus from the next field during fast editing.
 
 ### Security and verification
 

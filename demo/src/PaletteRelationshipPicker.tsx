@@ -140,7 +140,7 @@ export function PaletteRelationshipPicker({ value, onChange }: PaletteRelationsh
     shouldScrollActiveOptionRef.current = false;
     setIsOpen(false);
     typeaheadRef.current = { value: "", at: 0 };
-    if (restoreFocus) window.requestAnimationFrame(() => triggerRef.current?.focus());
+    if (restoreFocus) triggerRef.current?.focus();
   };
 
   const choose = (mode: PaletteMode): void => {
