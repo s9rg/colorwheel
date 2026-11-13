@@ -6,6 +6,7 @@ import {
   parsePaletteDocument,
   serializePaletteDocument
 } from "./document";
+import type { ValidationLimits } from "./document";
 import { formatColor } from "./format";
 import { mapToGamut } from "./gamut";
 import type {
@@ -130,9 +131,10 @@ function colorFormat(value: unknown): "hex" | "oklch" {
 
 export function exportPaletteJson(
   palette: Palette<object>,
-  options: JsonExportOptions = {}
+  options: JsonExportOptions = {},
+  validationLimits: ValidationLimits = {}
 ): ExportArtifact {
-  assertPalette(palette);
+  assertPalette(palette, validationLimits);
   const indentation = options.indentation ?? 2;
   if (!Number.isInteger(indentation) || indentation < 0 || indentation > 8) {
     throw new RangeError("indentation must be an integer between 0 and 8");
@@ -142,7 +144,7 @@ export function exportPaletteJson(
       {
         name: safeFilename(options.filename ?? "palette.json"),
         mediaType: "application/json",
-        content: serializePaletteDocument(palette, indentation)
+        content: serializePaletteDocument(palette, indentation, validationLimits)
       }
     ]
   };
@@ -150,9 +152,10 @@ export function exportPaletteJson(
 
 export function exportPaletteCss(
   palette: Palette<object>,
-  options: CssExportOptions = {}
+  options: CssExportOptions = {},
+  validationLimits: ValidationLimits = {}
 ): ExportArtifact {
-  assertPalette(palette);
+  assertPalette(palette, validationLimits);
   const selector = safeSelector(options.selector ?? ":root");
   const prefix = slug(nonEmptyString(options.prefix ?? "palette", "prefix"), "palette");
   const format = colorFormat(options.colorFormat);
@@ -173,9 +176,10 @@ export function exportPaletteCss(
 
 export function exportPaletteTokens(
   palette: Palette<object>,
-  options: DesignTokenExportOptions = {}
+  options: DesignTokenExportOptions = {},
+  validationLimits: ValidationLimits = {}
 ): ExportArtifact {
-  assertPalette(palette);
+  assertPalette(palette, validationLimits);
   const indentation = options.indentation ?? 2;
   if (!Number.isInteger(indentation) || indentation < 0 || indentation > 8) {
     throw new RangeError("indentation must be an integer between 0 and 8");
@@ -280,50 +284,72 @@ function decodeUtf8(bytes: Uint8Array): string {
   return result.join("");
 }
 
-export const builtInPaletteExporters: readonly PaletteExporter[] = [
+export const createBuiltInPaletteExporters = (
+  validationLimits: ValidationLimits = {}
+): readonly PaletteExporter[] => [
   {
     id: BUILT_IN_EXPORTER_IDS.json,
     version: BUILT_IN_SERIALIZER_VERSION,
     export(palette, options) {
-      return exportPaletteJson(palette, {
-        filename: optionString(options, "filename", "palette.json"),
-        indentation: optionIndentation(options)
-      });
+      return exportPaletteJson(
+        palette,
+        {
+          filename: optionString(options, "filename", "palette.json"),
+          indentation: optionIndentation(options)
+        },
+        validationLimits
+      );
     }
   },
   {
     id: BUILT_IN_EXPORTER_IDS.css,
     version: BUILT_IN_SERIALIZER_VERSION,
     export(palette, options) {
-      return exportPaletteCss(palette, {
-        filename: optionString(options, "filename", "palette.css"),
-        selector: optionString(options, "selector", ":root"),
-        prefix: optionString(options, "prefix", "palette"),
-        colorFormat: colorFormat(options.colorFormat)
-      });
+      return exportPaletteCss(
+        palette,
+        {
+          filename: optionString(options, "filename", "palette.css"),
+          selector: optionString(options, "selector", ":root"),
+          prefix: optionString(options, "prefix", "palette"),
+          colorFormat: colorFormat(options.colorFormat)
+        },
+        validationLimits
+      );
     }
   },
   {
     id: BUILT_IN_EXPORTER_IDS.tokens,
     version: BUILT_IN_SERIALIZER_VERSION,
     export(palette, options) {
-      return exportPaletteTokens(palette, {
-        filename: optionString(options, "filename", "palette.tokens.json"),
-        groupName: optionString(options, "groupName", "color"),
-        colorFormat: colorFormat(options.colorFormat),
-        indentation: optionIndentation(options)
-      });
+      return exportPaletteTokens(
+        palette,
+        {
+          filename: optionString(options, "filename", "palette.tokens.json"),
+          groupName: optionString(options, "groupName", "color"),
+          colorFormat: colorFormat(options.colorFormat),
+          indentation: optionIndentation(options)
+        },
+        validationLimits
+      );
     }
   }
 ];
 
-export const builtInPaletteImporters: readonly PaletteImporter[] = [
+export const createBuiltInPaletteImporters = (
+  validationLimits: ValidationLimits = {}
+): readonly PaletteImporter[] => [
   {
     id: BUILT_IN_IMPORTER_IDS.json,
     version: BUILT_IN_SERIALIZER_VERSION,
     import(content) {
-      assertPaletteDocumentContentSize(content);
-      return parsePaletteDocument(typeof content === "string" ? content : decodeUtf8(content));
+      assertPaletteDocumentContentSize(content, validationLimits);
+      return parsePaletteDocument(
+        typeof content === "string" ? content : decodeUtf8(content),
+        validationLimits
+      );
     }
   }
 ];
+
+export const builtInPaletteExporters = createBuiltInPaletteExporters();
+export const builtInPaletteImporters = createBuiltInPaletteImporters();

@@ -2,6 +2,44 @@
 
 This file records user-visible changes. Dates use the ISO `YYYY-MM-DD` format.
 
+## 1.1.1 - 2026-11-13
+
+### Fixed
+
+- Corrected React Native wheel gestures originating on child handles by measuring
+  the wheel in the same coordinate system as touch events, including deferred
+  measurement, moved layouts, and React 18 StrictMode lifecycle replay.
+- Preserved authored Display-P3 and OKLCH values when Angular or React Native
+  color fields lose focus without an edit.
+- Prevented stale React, Vue, and React Native color drafts from returning after
+  external palette updates, and preserved Vanilla name drafts across unrelated renders.
+- Rejected editor mutations that exceed palette validation limits before
+  changing controller state or notifying consumers, including JSON envelope size
+  and depth. JSON export uses compact output when indentation would exceed the
+  configured document byte limit.
+- Applied engine-specific validation limits consistently to built-in generation,
+  import, analysis, and export. Standalone document, analysis, and export helpers
+  also accept optional validation limits.
+- Preserved the demo seed picker's authored hue and saturation through black and
+  gray, including hue changes made while the displayed color is achromatic.
+- Included the visible Anchor badge in swatch accessible names across web adapters.
+
+### Security and verification
+
+- Restricted automatic Pages builds to successful pushes from this repository's
+  `main` branch, and restricted manual deployments to `main`.
+- Run the complete framework consumer lab against the packed release candidate,
+  including the React Native production bundle.
+- Refreshed development and demo dependencies and added dependency-advisory
+  checks for pull requests and scheduled runs.
+- Pinned the browser test runner to the previously verified Playwright 1.62.1
+  after the newer Firefox runtime crashed during accessibility scans. The new
+  accessibility checker and all browser assertions remain enabled.
+- Added regressions for coordinate handling, color fidelity, draft reconciliation,
+  validation boundaries, and seed-channel recovery.
+- Adjusted the core Brotli budget from 13 kB to 13.1 kB for consistent configurable
+  validation.
+
 ## 1.1.0 - 2026-09-04
 
 ### Added

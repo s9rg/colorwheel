@@ -172,24 +172,24 @@ export function NativePaletteSwatch<Metadata extends object = JsonObject>({
   testID = `colorwheel-palette-color-${entry.id}`
 }: NativePaletteSwatchProps<Metadata>) {
   const source = colorHex(entry);
-  const [draft, setDraft] = useState(source);
-  const [invalid, setInvalid] = useState(false);
+  const [edit, setEdit] = useState({ source, value: source, invalid: false });
+  const draft = edit.source === source ? edit.value : source;
+  const invalid = edit.source === source && edit.invalid;
   const editingColor = useRef(false);
-
-  useEffect(() => {
-    if (!editingColor.current) {
-      setDraft(source);
-      setInvalid(false);
-    }
-  }, [source]);
+  if (edit.source !== source) setEdit({ source, value: source, invalid: false });
 
   function commitColor(): void {
     editingColor.current = false;
+    if (edit.source !== source) {
+      setEdit({ source, value: source, invalid: false });
+      return;
+    }
+    if (!invalid && draft === source) return;
     try {
       actionProps.colorInput.onChangeText?.(draft);
-      setInvalid(false);
+      setEdit({ source, value: draft, invalid: false });
     } catch {
-      setInvalid(true);
+      setEdit({ source, value: draft, invalid: true });
     }
   }
 
@@ -260,7 +260,7 @@ export function NativePaletteSwatch<Metadata extends object = JsonObject>({
             actionProps.colorInput.onFocus?.(event);
           }}
           onChangeText={(value) => {
-            setDraft(value);
+            setEdit({ source, value, invalid });
           }}
           onSubmitEditing={commitColor}
           onBlur={(event) => {

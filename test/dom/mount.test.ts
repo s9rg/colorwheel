@@ -86,6 +86,31 @@ function unitPointerRect(): DOMRect {
 }
 
 describe("mountColorwheel", () => {
+  it("preserves name drafts through unrelated updates and accepts external name changes", () => {
+    const container = document.createElement("div");
+    document.body.append(container);
+    const instance = mountColorwheel(container, { palette: palette() });
+    const input = part<HTMLInputElement>(container, "name-input");
+    input.focus();
+    input.value = "Draft name";
+    input.dispatchEvent(new Event("input", { bubbles: true }));
+    instance.controller.commands.setActive("green");
+    instance.update({ className: "updated" });
+    expect(part<HTMLInputElement>(container, "name-input")).toBe(input);
+    expect(input.value).toBe("Draft name");
+    input.dispatchEvent(new Event("change", { bubbles: true }));
+    expect(instance.controller.getPalette().colors[0]?.name).toBe("Draft name");
+    input.value = "Stale draft";
+    input.dispatchEvent(new Event("input", { bubbles: true }));
+    instance.setPalette(
+      palette([entry("red", red, "External name"), entry("green", green, "Green")])
+    );
+    expect(input.value).toBe("External name");
+    input.dispatchEvent(new Event("change", { bubbles: true }));
+    expect(instance.controller.getPalette().colors[0]?.name).toBe("External name");
+    instance.destroy();
+    container.remove();
+  });
   it("rejects wheel overrides for full-state and injected-controller sources at runtime", () => {
     const container = document.createElement("div");
     const state = createPickerState({ palette: palette() });

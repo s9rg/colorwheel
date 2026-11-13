@@ -27,6 +27,12 @@ targets; Colorwheel's public package runtime and API are unchanged, and the
 release does not claim new physical-device or assistive-technology
 certification.
 
+Patch-release approval recorded 2026-11-13: the project owner requested fixes
+for all eight review findings, another independent review, and publication of
+1.1.1 after the release gates pass. The existing physical-device and
+assistive-technology deferrals remain visibly open; this patch does not claim
+new manual certification.
+
 ## 1. API and scope freeze
 
 - [x] Confirm the package name `@s9rg/colorwheel`.
@@ -86,6 +92,19 @@ package linting, and both type-resolution profiles. All 11 theme adapters
 compile successfully, the Pages build verifies their third-party notices, and
 `npm audit` reports zero vulnerabilities.
 
+Local 1.1.1 evidence recorded 2026-11-13 with Node 22.14.0 and npm 10.9.2:
+The integrated suite passes 336 unit/property/adapter/demo tests, all coverage
+thresholds, formatting, lint, type checks, library/demo builds, and all seven
+bundle budgets. Root and consumer-lab dependency audits report zero
+vulnerabilities. Independent follow-up review covered the core boundaries,
+adapter state/lifecycles, seed picker, dependencies, and release workflows;
+additional findings were fixed with regressions before sign-off.
+The packed candidate passes strict package linting, both type-resolution
+profiles, and fresh package-consumer fixtures (68 intended files). The full
+consumer lab runs against that same candidate and passes all framework type
+checks, Angular CLI development/production linking, eight development and eight
+production browser cases, native contracts, and a production Metro iOS bundle.
+
 ## 3. Automated production-browser gates
 
 The suite must build the static demo and preview it at the exact GitHub Pages
@@ -115,6 +134,12 @@ Firefox, WebKit, phone, and tablet projects: 186 passed and 12 were
 intentionally skipped where the all-adapter matrix, pointer dragging, or the
 explicit 320 px check would duplicate the relevant engine coverage. These
 results are emulated browser/device evidence, not physical-device sign-off.
+
+The local 1.1.1 production-path matrix passes 192 cases across the same six
+projects, with 12 intentional duplicate-coverage skips. Axe 4.14 reports no
+violations in the dialogs, web adapters, theme builder, or manual test surface.
+Playwright is pinned to 1.62.1 because the newer Firefox runtime crashed during
+otherwise unchanged accessibility scans; all assertions and rules remain enabled.
 
 ## 4. Manual desktop and assistive-technology gates
 
@@ -204,11 +229,11 @@ These are mandatory. Simulator or Playwright device profiles do not count.
 ## Sign-off
 
 - Release candidate commit:
-- Proposed version: 1.1.0
+- Proposed version: 1.1.1
 - Automated gates completed by/date:
 - Desktop accessibility completed by/date:
 - iPhone testing completed by/date:
 - Android testing completed by/date:
 - GitHub Pages public smoke completed by/date:
-- npm publication approved by/date: project owner / 2026-09-04
+- npm publication approved by/date: project owner / 2026-11-13, conditional on green release gates
 - Published package and integrity:

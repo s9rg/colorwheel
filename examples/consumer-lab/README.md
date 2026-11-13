@@ -32,18 +32,20 @@ runs the React Native contract assertion and creates a production iOS Metro
 bundle. `npm run dev` starts the Vite and Angular CLI development servers; the
 lab index links to the Vanilla, React, Vue, and Angular applications.
 
-The Angular app intentionally imports `@angular/compiler` as a temporary JIT
-fallback for a partial-Ivy marker escaping defect in the published 1.0.0
-artifact. The library source fixes that packaging defect for the next patch;
-the lab keeps exercising the immutable registry release until then.
+The registry Angular app imports `@angular/compiler` as a JIT fallback for a
+partial-Ivy marker escaping defect in the historical 1.0.0 artifact. That
+published baseline is separate from the required release-candidate gate.
 
-CI also overlays the packed release candidate without changing this project's
-registry lockfile. That separate gate uses `angular/src/main.candidate.ts`,
-which has no JIT compiler fallback, and exercises Angular CLI development and
-production browser runtimes. To repeat it after installing a candidate tarball:
+CI overlays the packed current commit without changing this project's registry
+lockfile, then runs **all five framework consumers** against that candidate:
+browser development and production journeys, framework type checks, and the
+React Native Metro bundle. The Angular candidate uses
+`angular/src/main.candidate.ts` without a JIT fallback. An additional focused
+Angular job retains explicit linker verification. To repeat the full gate after
+installing a candidate tarball:
 
 ```sh
-COLORWHEEL_CANDIDATE_VERSION=1.0.1 npm run check:angular:candidate
+COLORWHEEL_CANDIDATE_VERSION=1.1.1 npm run check:candidate
 ```
 
 Useful focused checks:
@@ -51,7 +53,7 @@ Useful focused checks:
 ```sh
 npm run typecheck:web
 npm run build:web
-COLORWHEEL_CANDIDATE_VERSION=1.0.1 npm run check:angular:candidate
+COLORWHEEL_CANDIDATE_VERSION=1.1.1 npm run check:angular:candidate
 npm run typecheck:native
 npm run test:native-contract
 npm run test:browser

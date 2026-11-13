@@ -5,6 +5,16 @@ type NativeProps = Record<string, unknown>;
 interface NativeRuntimeOptions {
   readonly findNodeHandle?: (node: unknown) => number | null;
   readonly setAccessibilityFocus?: (handle: number) => void;
+  readonly measure?: (
+    callback: (
+      x: number,
+      y: number,
+      width: number,
+      height: number,
+      pageX: number,
+      pageY: number
+    ) => void
+  ) => void;
 }
 
 function domAccessibilityProps(props: NativeProps) {
@@ -58,7 +68,19 @@ export function createReactNativeMock(
         ref(node: HTMLElement | null) {
           if (node !== null) {
             Object.assign(node, {
-              measureInWindow() {}
+              measureInWindow() {},
+              measure:
+                options.measure ??
+                ((
+                  callback: (
+                    x: number,
+                    y: number,
+                    width: number,
+                    height: number,
+                    pageX: number,
+                    pageY: number
+                  ) => void
+                ) => callback(0, 0, 200, 200, 0, 0))
             });
           }
           if (typeof forwardedRef === "function") forwardedRef(node);

@@ -3,7 +3,7 @@ import {
   assertPalette,
   mapToGamut,
   normalizeColor,
-  validatePalette
+  validatePaletteDocument
 } from "../core";
 import type { ColorValue, JsonObject, Palette, PaletteColor } from "../core";
 import { inspectJsonContainer } from "../core/json";
@@ -67,7 +67,7 @@ function assertOptionalId(value: unknown, label: string): asserts value is strin
 export function assertRuntimePalette<Metadata extends object>(
   palette: unknown
 ): asserts palette is Palette<Metadata> {
-  const result = validatePalette(palette);
+  const result = validatePaletteDocument({ schema: "color-palette", schemaVersion: 1, palette });
   if (result.valid) return;
   const duplicate = result.issues.find((issue) => issue.code === "palette.duplicate-id");
   const index = duplicate?.path.at(-2);

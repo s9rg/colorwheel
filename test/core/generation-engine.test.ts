@@ -2,6 +2,8 @@ import { runInNewContext } from "node:vm";
 import { describe, expect, it } from "vitest";
 import {
   BUILT_IN_EXPORTER_IDS,
+  BUILT_IN_ANALYZER_ID,
+  BUILT_IN_ANALYZER_VERSION,
   BUILT_IN_HARMONY_IDS,
   BUILT_IN_IMPORTER_IDS,
   BUILT_IN_SERIALIZER_VERSION,
@@ -15,6 +17,7 @@ import {
   createHarmonyPalette,
   createTonalPalette,
   mapToGamut,
+  parsePaletteDocument,
   serializePaletteDocument,
   type HarmonyStrategy,
   type GamutMappingStrategy,
@@ -222,6 +225,103 @@ describe("instance-scoped strategy engine", () => {
     expect(() => constrained.createHarmony(reference, "#123456")).toThrow(
       PaletteDocumentValidationError
     );
+  });
+
+  it("uses expanded instance limits throughout built-in import, analysis, and export", () => {
+    const palette: Palette = {
+      kind: "custom",
+      provenance: { origin: "manual" },
+      colors: Array.from({ length: 257 }, (_, index) => ({
+        id: `color-${index}`,
+        color: { space: "srgb", r: index / 256, g: 0, b: 0 }
+      })),
+      name: "x".repeat(17_000),
+      metadata: Object.fromEntries(
+        Array.from({ length: 5 }, (_, index) => [`field-${index}`, "x".repeat(14_000)])
+      )
+    };
+    const limits = {
+      maxColors: 512,
+      maxStringLength: 20_000,
+      maxMetadataBytes: 100_000,
+      maxDocumentBytes: 2_097_152
+    };
+    const engine = createColorEngine({ validationLimits: limits });
+    const document = { schema: "color-palette", schemaVersion: 1, palette };
+    const content = JSON.stringify(document);
+    const importer = { id: BUILT_IN_IMPORTER_IDS.json, version: BUILT_IN_SERIALIZER_VERSION };
+
+    expect(parsePaletteDocument(content, limits)).toEqual(document);
+    expect(engine.import(content, importer)).toEqual(document);
+    expect(engine.import(new TextEncoder().encode(content), importer)).toEqual(document);
+    expect(engine.import(`${" ".repeat(1_048_576)}${content}`, importer)).toEqual(document);
+    expect(engine.validate(palette)).toEqual([]);
+    expect(
+      engine.analyze(palette, [
+        {
+          id: BUILT_IN_ANALYZER_ID,
+          version: BUILT_IN_ANALYZER_VERSION,
+          options: { includeGamut: false, includePerceptualDistance: false }
+        }
+      ])
+    ).toEqual({ diagnostics: [] });
+
+    const json = engine.export(palette, {
+      id: BUILT_IN_EXPORTER_IDS.json,
+      version: BUILT_IN_SERIALIZER_VERSION
+    }).files[0]?.content;
+    expect(typeof json).toBe("string");
+    expect(engine.import(json as string, importer)).toEqual(document);
+    for (const id of [BUILT_IN_EXPORTER_IDS.css, BUILT_IN_EXPORTER_IDS.tokens]) {
+      const artifact = engine.export(palette, { id, version: BUILT_IN_SERIALIZER_VERSION });
+      expect(artifact.files[0]?.content).toContain("color-256");
+    }
+
+    expect(() => createColorEngine().import(content, importer)).toThrow(
+      PaletteDocumentValidationError
+    );
+    expect(() =>
+      createColorEngine().export(palette, {
+        id: BUILT_IN_EXPORTER_IDS.json,
+        version: BUILT_IN_SERIALIZER_VERSION
+      })
+    ).toThrow(PaletteDocumentValidationError);
+  });
+
+  it("uses expanded limits for built-in generation while direct helpers retain defaults", () => {
+    const name = "x".repeat(17_000);
+    const engine = createColorEngine({ validationLimits: { maxStringLength: 20_000 } });
+    expect(
+      engine.createHarmony(
+        {
+          id: BUILT_IN_HARMONY_IDS.single,
+          version: BUILT_IN_STRATEGY_VERSION,
+          options: { name }
+        },
+        "#ff0000"
+      ).name
+    ).toBe(name);
+    expect(
+      engine.generate({
+        id: "generator.tonal",
+        version: BUILT_IN_STRATEGY_VERSION,
+        options: { seed: { space: "srgb", r: 1, g: 0, b: 0 }, name }
+      }).name
+    ).toBe(name);
+    expect(() =>
+      createHarmonyPalette({ seed: "#ff0000", harmony: { type: "single" }, name })
+    ).toThrow(PaletteDocumentValidationError);
+    expect(() => createTonalPalette({ seed: "#ff0000", name })).toThrow(
+      PaletteDocumentValidationError
+    );
+  });
+
+  it("keeps engine limits isolated from later changes to the options object", () => {
+    const validationLimits = { maxColors: 1 };
+    const engine = createColorEngine({ validationLimits });
+    validationLimits.maxColors = 10;
+    const palette = testPalette();
+    expect(() => engine.validate(palette)).toThrow(PaletteDocumentValidationError);
   });
 
   it("runs built-ins through the same registry contract", () => {

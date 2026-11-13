@@ -416,7 +416,8 @@ function renderPaletteBlock<Metadata extends object>(
   state: PickerState<Metadata>,
   instanceId: string,
   blockProps: ColorwheelPaletteBlockProps = {},
-  drafts?: ReadonlyMap<string, ColorDraft>
+  drafts?: ReadonlyMap<string, ColorDraft>,
+  nameDrafts?: ReadonlyMap<string, { readonly source: string; readonly value: string }>
 ): HTMLElement {
   const section = makeElement(ownerDocument, "section", "palette");
   section.className = "colorwheel-palette";
@@ -458,7 +459,10 @@ function renderPaletteBlock<Metadata extends object>(
     swatch.type = "button";
     swatch.dataset.action = "select";
     swatch.dataset.colorId = entry.id;
-    swatch.setAttribute("aria-label", `Select ${label}, ${hex}`);
+    swatch.setAttribute(
+      "aria-label",
+      `Select ${label}, ${hex}${entry.id === state.anchorColorId ? ", anchor color" : ""}`
+    );
     swatch.setAttribute("aria-pressed", String(entry.id === state.activeColorId));
     swatch.style.setProperty("--colorwheel-swatch-color", colorCss(entry.color));
     const swatchColor = makeElement(ownerDocument, "span", "swatch-color");
@@ -480,7 +484,9 @@ function renderPaletteBlock<Metadata extends object>(
       hiddenName.textContent = `${label} name`;
       const nameInput = makeElement(ownerDocument, "input", "name-input");
       nameInput.dataset.colorId = entry.id;
-      nameInput.value = entry.name ?? "";
+      const nameDraft = nameDrafts?.get(entry.id);
+      nameInput.value =
+        nameDraft?.source === (entry.name ?? "") ? nameDraft.value : (entry.name ?? "");
       nameInput.placeholder = label;
       nameLabel.append(hiddenName, nameInput);
       fields.append(nameLabel);
@@ -893,6 +899,7 @@ export function mountColorwheel<Metadata extends object = JsonObject>(
   let unsubscribe: (() => void) | undefined;
   let previousPalette = controller.getPalette();
   const colorDrafts = new Map<string, ColorDraft>();
+  const nameDrafts = new Map<string, { readonly source: string; readonly value: string }>();
 
   const root = makeElement(ownerDocument, "div", "root");
   root.dataset.colorwheel = "";
@@ -948,7 +955,8 @@ export function mountColorwheel<Metadata extends object = JsonObject>(
           controller.getState(),
           instanceId,
           options.blockProps?.palette,
-          colorDrafts
+          colorDrafts,
+          nameDrafts
         )
     };
     const result = renderer(context);
@@ -984,6 +992,10 @@ export function mountColorwheel<Metadata extends object = JsonObject>(
       if (entry === undefined || colorHex(entry.color) !== draft.source)
         colorDrafts.delete(colorId);
     }
+    for (const [colorId, draft] of nameDrafts) {
+      const entry = state.palette.colors.find((candidate) => candidate.id === colorId);
+      if (entry === undefined || (entry.name ?? "") !== draft.source) nameDrafts.delete(colorId);
+    }
     applyPresentation();
     reconcileChildren(wheelContainer, [
       renderWheel(ownerDocument, state, instanceId, options.blockProps?.wheel, ringSide)
@@ -1001,7 +1013,8 @@ export function mountColorwheel<Metadata extends object = JsonObject>(
           state,
           instanceId,
           options.blockProps?.palette,
-          colorDrafts
+          colorDrafts,
+          nameDrafts
         )
       ]);
     } else {
@@ -1097,10 +1110,15 @@ export function mountColorwheel<Metadata extends object = JsonObject>(
 
   function onInput(event: Event): void {
     const input = event.target;
-    if (!isInputElement(input, ownerDocument) || input.dataset.part !== "color-input") return;
+    if (!isInputElement(input, ownerDocument)) return;
     const colorId = input.dataset.colorId;
     const entry = colorId === undefined ? undefined : currentEntry(colorId);
     if (colorId === undefined || entry === undefined) return;
+    if (input.dataset.part === "name-input") {
+      nameDrafts.set(colorId, { source: entry.name ?? "", value: input.value });
+      return;
+    }
+    if (input.dataset.part !== "color-input") return;
     colorDrafts.set(colorId, {
       source: colorHex(entry.color),
       value: input.value,
@@ -1153,6 +1171,7 @@ export function mountColorwheel<Metadata extends object = JsonObject>(
     if (input.dataset.part === "name-input") {
       const colorId = input.dataset.colorId;
       if (colorId !== undefined) {
+        nameDrafts.delete(colorId);
         controller.commands.setName(colorId, input.value || undefined, {
           action: "text-input",
           phase: "commit"

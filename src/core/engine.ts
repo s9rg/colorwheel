@@ -1,8 +1,8 @@
-import { builtInPaletteAnalyzers } from "./analysis";
+import { builtInPaletteAnalyzers, createBuiltInPaletteAnalyzers } from "./analysis";
 import { convertColor, resolveColor } from "./convert";
 import { assertPalette, assertPaletteDocument, assertPaletteDocumentContentSize } from "./document";
 import type { ValidationLimits } from "./document";
-import { builtInPaletteExporters, builtInPaletteImporters } from "./exporters";
+import { createBuiltInPaletteExporters, createBuiltInPaletteImporters } from "./exporters";
 import { mapToGamut } from "./gamut";
 import { builtInHarmonyStrategies, builtInPaletteGenerators } from "./generation";
 import { inspectJsonContainer, isPlainJsonObject } from "./json";
@@ -383,7 +383,7 @@ export function createColorEngine(options: EngineOptions = {}): ColorEngine {
     importer: importers
   };
   const override = options.overrideStrategies ?? false;
-  const validationLimits = options.validationLimits ?? {};
+  const validationLimits = { ...options.validationLimits };
   const addAll = <Implementation extends StrategyIdentity>(
     registry: Registry<Implementation>,
     implementations: readonly Implementation[],
@@ -398,10 +398,10 @@ export function createColorEngine(options: EngineOptions = {}): ColorEngine {
   if (includeBuiltIns) {
     addAll(harmonies, builtInHarmonyStrategies, false);
     addAll(generators, builtInPaletteGenerators, false);
-    addAll(analyzers, builtInPaletteAnalyzers, false);
+    addAll(analyzers, createBuiltInPaletteAnalyzers(validationLimits), false);
     addAll(gamutPolicies, builtInGamutStrategies, false);
-    addAll(exporters, builtInPaletteExporters, false);
-    addAll(importers, builtInPaletteImporters, false);
+    addAll(exporters, createBuiltInPaletteExporters(validationLimits), false);
+    addAll(importers, createBuiltInPaletteImporters(validationLimits), false);
   }
   addAll(harmonies, options.harmonies ?? [], override);
   addAll(generators, options.generators ?? [], override);

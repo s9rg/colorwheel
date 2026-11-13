@@ -1,7 +1,7 @@
 // @vitest-environment jsdom
 
 import "@testing-library/jest-dom/vitest";
-import { cleanup, fireEvent, render, screen, waitFor } from "@testing-library/react";
+import { act, cleanup, fireEvent, render, screen, waitFor } from "@testing-library/react";
 import { useEffect } from "react";
 import { afterEach, describe, expect, it, vi } from "vitest";
 import { createHarmonyPalette } from "../../src/core";
@@ -64,6 +64,78 @@ function ControllerProbe() {
 }
 
 describe("NativePickerRoot", () => {
+  it("preserves authored wide-gamut colors on untouched blur and submit", () => {
+    const color = { space: "display-p3" as const, r: 1, g: 0, b: 0 };
+    const onPaletteChange = vi.fn();
+    const controller = createPickerController(
+      createPickerState({
+        palette: { ...palette(), colors: [{ id: "red", name: "Red", color }] }
+      }),
+      { onPaletteChange }
+    );
+    render(
+      <NativePickerProvider controller={controller}>
+        <NativePaletteBlock />
+      </NativePickerProvider>
+    );
+    const input = screen.getByRole("textbox", { name: "Red color value" });
+    fireEvent.focus(input);
+    fireEvent.blur(input);
+    fireEvent.focus(input);
+    fireEvent.keyDown(input, { key: "Enter" });
+    expect(controller.getPalette().colors[0]?.color).toEqual(color);
+    expect(onPaletteChange).not.toHaveBeenCalled();
+  });
+
+  it("does not overwrite external colors with focused or dirty stale drafts", () => {
+    const controller = createPickerController(createPickerState({ palette: palette() }));
+    render(
+      <NativePickerProvider controller={controller}>
+        <NativePaletteBlock />
+      </NativePickerProvider>
+    );
+    const input = screen.getByRole("textbox", { name: "Red color value" });
+    fireEvent.focus(input);
+    fireEvent.change(input, { target: { value: "#0000ff" } });
+    const color = { space: "srgb" as const, r: 0, g: 1, b: 0 };
+    act(() => controller.setPalette({ ...palette(), colors: [{ id: "red", name: "Red", color }] }));
+    expect(input).toHaveValue("#00ff00");
+    fireEvent.blur(input);
+    expect(controller.getPalette().colors[0]?.color).toEqual(color);
+    fireEvent.focus(input);
+    fireEvent.change(input, { target: { value: "#ffffff" } });
+    fireEvent.blur(input);
+    expect(controller.getPalette().colors[0]?.color).toEqual({ space: "srgb", r: 1, g: 1, b: 1 });
+  });
+
+  it("discards stale drafts when an external color changes and later returns", () => {
+    const original = palette();
+    const onPaletteChange = vi.fn();
+    const controller = createPickerController(createPickerState({ palette: original }), {
+      onPaletteChange
+    });
+    render(
+      <NativePickerProvider controller={controller}>
+        <NativePaletteBlock />
+      </NativePickerProvider>
+    );
+    const input = screen.getByRole("textbox", { name: "Red color value" });
+    fireEvent.focus(input);
+    fireEvent.change(input, { target: { value: "#0000ff" } });
+    act(() =>
+      controller.setPalette({
+        ...original,
+        colors: [{ ...original.colors[0], color: { space: "srgb", r: 0, g: 1, b: 0 } }]
+      })
+    );
+    expect(input).toHaveValue("#00ff00");
+    act(() => controller.setPalette(original));
+    expect(input).toHaveValue("#ff0000");
+    fireEvent.blur(input);
+    expect(controller.getPalette()).toBe(original);
+    expect(onPaletteChange).not.toHaveBeenCalled();
+  });
+
   it("rejects wheel overrides for full-state and injected-controller sources at runtime", () => {
     const state = createPickerState({ palette: palette() });
     const controller = createPickerController(state);

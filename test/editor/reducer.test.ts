@@ -1,6 +1,6 @@
 import { runInNewContext } from "node:vm";
 import { describe, expect, it } from "vitest";
-import { createHarmonyPalette } from "../../src/core";
+import { PaletteDocumentValidationError, createHarmonyPalette } from "../../src/core";
 import {
   DuplicateColorIdError,
   EditorStateError,
@@ -91,6 +91,19 @@ describe("reducePickerState", () => {
         entry: makeEntry("red", blue)
       })
     ).toThrow(DuplicateColorIdError);
+  });
+
+  it("rejects a color addition that would exceed palette resource limits", () => {
+    const state = createPickerState({
+      palette: makePalette(Array.from({ length: 256 }, (_, index) => makeEntry(`c-${index}`, red)))
+    });
+    expect(() =>
+      reducePickerState(state, {
+        type: "add-color",
+        entry: makeEntry("overflow", blue)
+      })
+    ).toThrow(PaletteDocumentValidationError);
+    expect(state.palette.colors).toHaveLength(256);
   });
 
   it("reorders swatches without changing recipe or wheel focus order", () => {

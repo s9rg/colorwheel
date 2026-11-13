@@ -122,6 +122,29 @@ describe("React picker composition", () => {
     });
   });
 
+  it("discards stale drafts when an external color changes and later returns", () => {
+    const original = manualPalette();
+    const onPaletteChange = vi.fn();
+    const controller = createPickerController(createPickerState({ palette: original }), {
+      onPaletteChange
+    });
+    render(
+      <PickerRoot controller={controller}>
+        <PaletteBlock />
+      </PickerRoot>
+    );
+    const input = screen.getByRole("textbox", { name: "Primary value" });
+    fireEvent.focus(input);
+    fireEvent.change(input, { target: { value: "#0000ff" } });
+    act(() => controller.setPalette(manualPalette("#00ff00")));
+    expect(input).toHaveValue("#00ff00");
+    act(() => controller.setPalette(original));
+    expect(input).toHaveValue("#ef4444");
+    fireEvent.blur(input);
+    expect(controller.getPalette()).toBe(original);
+    expect(onPaletteChange).not.toHaveBeenCalled();
+  });
+
   it("does not echo an external removal during an active name edit", () => {
     const onChange = vi.fn();
     const onPaletteChange = vi.fn();

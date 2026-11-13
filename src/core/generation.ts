@@ -154,7 +154,6 @@ function harmonyPalette(
       return name === undefined ? {} : { name };
     })()
   };
-  assertPalette(palette);
   return palette;
 }
 
@@ -371,7 +370,6 @@ const tonalGenerator: BuiltInPaletteGenerator = {
         return name === undefined ? {} : { name };
       })()
     };
-    assertPalette(palette);
     return palette;
   }
 };
@@ -418,7 +416,10 @@ function remapIds(
   palette: Palette,
   factory: HarmonyOptions["idFactory"] | TonalOptions["idFactory"]
 ): Palette {
-  if (factory === undefined) return palette;
+  if (factory === undefined) {
+    assertPalette(palette);
+    return palette;
+  }
   const ids = new Map<string, string>();
   const colors = palette.colors.map((entry, index) => {
     const id = factory(index, entry.color);

@@ -2,11 +2,14 @@ import { describe, expect, it, vi } from "vitest";
 import {
   BUILT_IN_HARMONY_IDS,
   BUILT_IN_STRATEGY_VERSION,
+  PaletteDocumentValidationError,
   createHarmonyPalette,
+  exportPaletteJson,
   formatColor,
   mapToGamut,
   parsePaletteDocument,
-  serializePaletteDocument
+  serializePaletteDocument,
+  validatePalette
 } from "../../src/core";
 import type { ChangeMeta, LinkedColorUpdate, PickerState } from "../../src/editor";
 import {
@@ -34,6 +37,68 @@ function hue(state: PickerState, colorId: string): number | undefined {
 }
 
 describe("createPickerController", () => {
+  it("rejects additions beyond the palette limit without changing state or notifying", () => {
+    const palette = makePalette(
+      Array.from({ length: 256 }, (_, index) => makeEntry(`c-${index}`, red))
+    );
+    const onChange = vi.fn();
+    const controller = createPickerController(createPickerState({ palette }), { onChange });
+    const before = controller.getState();
+    const listener = vi.fn();
+    controller.subscribe(selectPalette, listener);
+
+    expect(() => controller.commands.addColor({ id: "overflow", color: blue })).toThrow(
+      PaletteDocumentValidationError
+    );
+    expect(controller.getState()).toBe(before);
+    expect(listener).not.toHaveBeenCalled();
+    expect(onChange).not.toHaveBeenCalled();
+    expect(() => exportPaletteJson(controller.getPalette())).not.toThrow();
+
+    controller.commands.removeColor("c-255");
+    controller.commands.addColor({ id: "replacement", color: blue });
+    expect(controller.getPalette().colors).toHaveLength(256);
+  });
+
+  it("rejects field edits that exceed the document byte limit atomically", () => {
+    const entries = Array.from({ length: 64 }, (_, index) =>
+      makeEntry(`c-${index}`, red, {
+        name: index < 63 ? "x".repeat(16_384) : ""
+      })
+    );
+    const palette = makePalette(entries);
+    const document = { schema: "color-palette", schemaVersion: 1, palette };
+    const finalName = "x".repeat(1_048_576 - JSON.stringify(document).length - 8);
+    entries[63] = { ...entries[63], name: finalName };
+    const onChange = vi.fn();
+    const controller = createPickerController(createPickerState({ palette }), { onChange });
+    const before = controller.getState();
+    const listener = vi.fn();
+    controller.subscribe(selectPalette, listener);
+    const oversizedName = `${finalName}${"x".repeat(16)}`;
+    expect(
+      validatePalette({
+        ...palette,
+        colors: entries.map((entry, index) =>
+          index === 63 ? { ...entry, name: oversizedName } : entry
+        )
+      }).valid
+    ).toBe(true);
+
+    expect(() => controller.commands.setName("c-63", oversizedName)).toThrow(
+      PaletteDocumentValidationError
+    );
+    expect(controller.getState()).toBe(before);
+    expect(controller.getPalette().colors[63]?.name).toBe(finalName);
+    expect(listener).not.toHaveBeenCalled();
+    expect(onChange).not.toHaveBeenCalled();
+
+    controller.commands.setName("c-63", `${finalName}xxxx`);
+    const encoded = exportPaletteJson(controller.getPalette()).files[0]?.content;
+    expect(typeof encoded).toBe("string");
+    expect(parsePaletteDocument(encoded as string).palette).toEqual(controller.getPalette());
+  });
+
   it("synchronizes external palettes without echoing controlled callbacks", () => {
     const onChange = vi.fn();
     const onPaletteChange = vi.fn();

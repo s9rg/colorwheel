@@ -371,6 +371,26 @@ describe("Colorwheel Vue adapter", () => {
     second.destroy();
   });
 
+  it("discards stale drafts when an external color changes and later returns", async () => {
+    const original = palette();
+    const controller = createPickerController(createPickerState({ palette: original }));
+    const wrapper = mount(Colorwheel, { props: { controller } });
+    const input = wrapper.get<HTMLInputElement>('[data-part="color-input"][data-color-id="red"]');
+    await input.trigger("focus");
+    input.element.value = "#0000ff";
+    await input.trigger("input");
+    controller.setPalette(palette([entry("red", green, "Red")]));
+    await nextTick();
+    expect(input.element.value).toBe("#00ff00");
+    controller.setPalette(original);
+    await nextTick();
+    expect(input.element.value).toBe("#ff0000");
+    await input.trigger("blur");
+    expect(controller.getPalette()).toBe(original);
+    expect(wrapper.emitted("palette-change")).toBeUndefined();
+    wrapper.unmount();
+  });
+
   it("closes edit sessions and clears drafts when their color is removed", async () => {
     const onChange = vi.fn();
     const wrapper = mount(Colorwheel, { props: { defaultPalette: palette(), onChange } });
