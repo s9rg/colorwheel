@@ -257,7 +257,12 @@
   },
   "overrides": {
     "esbuild": "^0.28.1",
-    "glob@>=9 <14.0.2": "^14.0.6",
+    "@axe-core/playwright": {
+      "playwright-core": "1.62.1"
+    },
+    "js-beautify": {
+      "glob": "^14.0.6"
+    },
     "minimatch@>=7 <11.0.1": "^11.0.8"
   },
   "size-limit": [
