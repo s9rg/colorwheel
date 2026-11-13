@@ -7,7 +7,12 @@ const svgManifest = require("react-native-svg/package.json");
 const appSource = readFileSync(path.join(__dirname, "App.tsx"), "utf8");
 
 assert.equal(packageManifest.name, "@s9rg/colorwheel");
-assert.equal(packageManifest.version, "1.0.0");
+assert.equal(
+  packageManifest.version,
+  process.env.COLORWHEEL_CANDIDATE_VERSION ??
+    require("../package.json").dependencies["@s9rg/colorwheel"],
+  "React Native must exercise the requested candidate or pinned registry release"
+);
 assert.ok(packageManifest.exports["./react-native"], "React Native export is missing");
 assert.match(svgManifest.version, /^15\./, "consumer must exercise react-native-svg 15");
 

@@ -69,6 +69,39 @@ describe("ColorwheelComponent", () => {
     getTestBed().resetTestEnvironment();
   });
 
+  it("preserves an untouched authored P3 color through blur, change, and Enter", () => {
+    TestBed.configureTestingModule({ imports: [ColorwheelComponent] });
+    const fixture = TestBed.createComponent(ColorwheelComponent);
+    const color = { space: "display-p3" as const, r: 1, g: 0, b: 0 };
+    fixture.componentRef.setInput("defaultPalette", {
+      ...palette(),
+      colors: [{ id: "red", color }]
+    });
+    fixture.detectChanges();
+    const changes = vi.fn();
+    fixture.componentInstance.paletteChange.subscribe(changes);
+    const input = (fixture.nativeElement as HTMLElement).querySelector<HTMLInputElement>(
+      "[data-part='color-input']"
+    )!;
+    input.dispatchEvent(new FocusEvent("focus"));
+    input.dispatchEvent(new FocusEvent("blur"));
+    input.dispatchEvent(new Event("change", { bubbles: true }));
+    input.dispatchEvent(new KeyboardEvent("keydown", { key: "Enter", bubbles: true }));
+    expect(fixture.componentInstance.editorController?.getPalette().colors[0]?.color).toEqual(
+      color
+    );
+    expect(changes).not.toHaveBeenCalled();
+    input.value = "#ffffff";
+    input.dispatchEvent(new Event("input", { bubbles: true }));
+    input.dispatchEvent(new FocusEvent("blur"));
+    expect(fixture.componentInstance.editorController?.getPalette().colors[0]?.color).toEqual({
+      space: "srgb",
+      r: 1,
+      g: 1,
+      b: 1
+    });
+  });
+
   it("renders an Angular-native editor from an owned default palette and destroys ownership", () => {
     TestBed.configureTestingModule({ imports: [ColorwheelComponent] });
     const fixture = TestBed.createComponent(ColorwheelComponent);

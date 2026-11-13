@@ -754,16 +754,26 @@ export function assertPaletteDocument(
 }
 
 export function createPaletteDocument<Metadata extends object>(
-  palette: Palette<Metadata>
+  palette: Palette<Metadata>,
+  options: ValidationLimits = {}
 ): PaletteDocument<Metadata> {
-  assertPalette(palette);
-  return { schema: "color-palette", schemaVersion: 1, palette };
+  const document: PaletteDocument<Metadata> = {
+    schema: "color-palette",
+    schemaVersion: 1,
+    palette
+  };
+  assertPaletteDocument(document, options);
+  return document;
 }
 
 export function serializePaletteDocument(
   input: Palette<object> | PaletteDocument<object>,
-  indentation: number | string = 2
+  indentation: number | string = 2,
+  options: ValidationLimits = {}
 ): string {
+  if (typeof indentation === "string" && /[^\t\n\r ]/.test(indentation)) {
+    throw new TypeError("indentation must contain only JSON whitespace");
+  }
   const schema = Object.getOwnPropertyDescriptor(input, "schema");
   const schemaVersion = Object.getOwnPropertyDescriptor(input, "schemaVersion");
   const palette = Object.getOwnPropertyDescriptor(input, "palette");
@@ -776,9 +786,14 @@ export function serializePaletteDocument(
     schemaVersion.value === 1 &&
     palette !== undefined &&
     "value" in palette;
-  const document = isDocument ? input : createPaletteDocument(input as Palette<object>);
-  assertPaletteDocument(document);
-  return JSON.stringify(document, null, indentation);
+  const document = isDocument ? input : createPaletteDocument(input as Palette<object>, options);
+  if (isDocument) assertPaletteDocument(document, options);
+  const encoded = JSON.stringify(document, null, indentation);
+  // Keep the document importable under the same byte limit. Formatting can
+  // exceed the limit even when the validated compact document fits.
+  return utf8ByteLength(encoded) <= limits(options).maxDocumentBytes
+    ? encoded
+    : JSON.stringify(document);
 }
 
 export function parsePaletteDocument(

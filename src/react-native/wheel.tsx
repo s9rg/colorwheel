@@ -5,7 +5,6 @@ import type {
   AccessibilityActionEvent,
   GestureResponderEvent,
   LayoutChangeEvent,
-  NativeTouchEvent,
   PressableProps,
   StyleProp,
   TextStyle,
@@ -42,6 +41,12 @@ interface MeasuredWheel {
 interface ActiveGesture<Metadata extends object> {
   readonly colorId: string;
   readonly interaction: PickerInteraction<Metadata>;
+}
+
+interface PendingTouch {
+  readonly start: { readonly x: number; readonly y: number };
+  readonly latest?: { readonly x: number; readonly y: number };
+  readonly released: boolean;
 }
 
 export interface NativeWheelGraphicProps {
@@ -149,6 +154,9 @@ class NativeWheelGestureSession<Metadata extends object> {
   #layout: Pick<MeasuredWheel, "width" | "height"> | null = null;
   #measurement: MeasuredWheel | null = null;
   #gesture: ActiveGesture<Metadata> | null = null;
+  #pendingTouch: PendingTouch | null = null;
+  #measurementVersion = 0;
+  #measuring = false;
 
   constructor(controller: PickerController<Metadata>, disabled: boolean) {
     this.#controller = controller;
@@ -168,48 +176,27 @@ class NativeWheelGestureSession<Metadata extends object> {
   readonly onLayout = (event: LayoutChangeEvent): void => {
     const { width, height } = event.nativeEvent.layout;
     this.#layout = { width, height };
-    this.#updateMeasurement(width, height);
   };
 
-  #updateMeasurement(width?: number, height?: number): void {
-    this.#surface?.measureInWindow((left, top, measuredWidth, measuredHeight) => {
-      this.#measurement = {
-        left,
-        top,
-        width: measuredWidth || width || 0,
-        height: measuredHeight || height || 0
-      };
-    });
-  }
-
-  #pointFromTouch(touch: NativeTouchEvent): WheelPoint | undefined {
-    const layout = this.#layout;
-    if (
-      layout !== null &&
-      layout.width > 0 &&
-      layout.height > 0 &&
-      Number.isFinite(touch.locationX) &&
-      Number.isFinite(touch.locationY)
-    ) {
-      return clientPointToWheelPoint(
-        { x: touch.locationX, y: touch.locationY },
-        { left: 0, top: 0, width: layout.width, height: layout.height }
-      );
-    }
+  #pointFromTouch(touch: { readonly x: number; readonly y: number }): WheelPoint | undefined {
     const rect = this.#measurement;
-    if (rect === null || rect.width <= 0 || rect.height <= 0) return undefined;
-    return clientPointToWheelPoint(
-      { x: touch.pageX - rect.left, y: touch.pageY - rect.top },
-      { left: 0, top: 0, width: rect.width, height: rect.height }
-    );
+    if (
+      rect === null ||
+      rect.width <= 0 ||
+      rect.height <= 0 ||
+      !Number.isFinite(touch.x) ||
+      !Number.isFinite(touch.y)
+    )
+      return undefined;
+    return clientPointToWheelPoint(touch, rect);
   }
 
   #colorIdAtTouch(
     currentState: PickerState<Metadata>,
-    touch: NativeTouchEvent
+    touch: { readonly x: number; readonly y: number }
   ): string | undefined {
     const point = this.#pointFromTouch(touch);
-    const dimensions = this.#layout ?? this.#measurement;
+    const dimensions = this.#measurement ?? this.#layout;
     if (point === undefined || dimensions === null) return undefined;
     const size = Math.min(dimensions.width, dimensions.height);
     let nearest: { readonly colorId: string; readonly distance: number } | undefined;
@@ -225,10 +212,13 @@ class NativeWheelGestureSession<Metadata extends object> {
     return nearest?.colorId;
   }
 
-  #applyTouch(event: GestureResponderEvent, activeGesture: ActiveGesture<Metadata>): void {
+  #applyTouch(
+    touch: { readonly x: number; readonly y: number },
+    activeGesture: ActiveGesture<Metadata>
+  ): void {
     const currentState = this.#controller.getState();
     const entry = findEntry(currentState, activeGesture.colorId);
-    const point = this.#pointFromTouch(event.nativeEvent);
+    const point = this.#pointFromTouch(touch);
     if (
       entry === undefined ||
       point === undefined ||
@@ -245,11 +235,10 @@ class NativeWheelGestureSession<Metadata extends object> {
     });
   }
 
-  readonly begin = (event: GestureResponderEvent): void => {
-    this.#updateMeasurement();
+  #beginMeasuredTouch(touch: PendingTouch["start"]): void {
     const currentState = this.#controller.getState();
     const requested =
-      this.#colorIdAtTouch(currentState, event.nativeEvent) ??
+      this.#colorIdAtTouch(currentState, touch) ??
       (currentState.wheel.interaction === "linked"
         ? currentState.anchorColorId
         : (currentState.activeColorId ?? currentState.palette.colors[0]?.id));
@@ -263,26 +252,70 @@ class NativeWheelGestureSession<Metadata extends object> {
       colorId: entry.id,
       interaction: this.#controller.beginInteraction({ action: "pointer" })
     };
+  }
+
+  #measureTouch(): void {
+    if (this.#measuring) return;
+    this.#measuring = true;
+    const version = ++this.#measurementVersion;
+    // measure() page coordinates share the root coordinate system of touch.pageX/Y.
+    // locationX/Y belong to the touched child, and measureInWindow can use a
+    // different origin when a React Native root is embedded in a native screen.
+    this.#surface?.measure((_x, _y, width, height, left, top) => {
+      if (version !== this.#measurementVersion || this.#pendingTouch === null) return;
+      this.#measuring = false;
+      this.#measurement = { left, top, width, height };
+      const pending = this.#pendingTouch;
+      if (this.#pointFromTouch(pending.start) === undefined) return;
+      if (this.#gesture === null) this.#beginMeasuredTouch(pending.start);
+      if (this.#gesture !== null && pending.latest !== undefined) {
+        this.#applyTouch(pending.latest, this.#gesture);
+      }
+      if (pending.released) this.#commitActiveGesture();
+    });
+  }
+
+  readonly begin = (event: GestureResponderEvent): void => {
+    this.#commitActiveGesture();
+    this.#pendingTouch = {
+      start: { x: event.nativeEvent.pageX, y: event.nativeEvent.pageY },
+      released: false
+    };
+    this.#measureTouch();
   };
 
   readonly move = (event: GestureResponderEvent): void => {
-    if (this.#gesture !== null) this.#applyTouch(event, this.#gesture);
+    if (this.#pendingTouch === null) return;
+    this.#pendingTouch = {
+      ...this.#pendingTouch,
+      latest: { x: event.nativeEvent.pageX, y: event.nativeEvent.pageY }
+    };
+    this.#measureTouch();
   };
 
   readonly release = (event: GestureResponderEvent): void => {
-    if (this.#gesture === null) return;
-    this.#applyTouch(event, this.#gesture);
-    this.#gesture.interaction.commit();
-    this.#gesture = null;
+    if (this.#pendingTouch === null) return;
+    this.#pendingTouch = {
+      ...this.#pendingTouch,
+      latest: { x: event.nativeEvent.pageX, y: event.nativeEvent.pageY },
+      released: true
+    };
+    this.#measureTouch();
   };
 
   readonly terminate = (): void => {
+    this.#pendingTouch = null;
+    this.#measurementVersion += 1;
+    this.#measuring = false;
     if (this.#gesture === null) return;
     this.#gesture.interaction.cancel();
     this.#gesture = null;
   };
 
   #commitActiveGesture(): void {
+    this.#pendingTouch = null;
+    this.#measurementVersion += 1;
+    this.#measuring = false;
     if (this.#gesture === null) return;
     this.#gesture.interaction.commit();
     this.#gesture = null;
@@ -304,7 +337,8 @@ class NativeWheelGestureSession<Metadata extends object> {
 
   destroy(): void {
     this.#commitActiveGesture();
-    this.#surface = null;
+    // The host ref owns the surface. React 18 StrictMode replays effects without
+    // reattaching refs, so clearing it here would disable the remounted session.
     this.#layout = null;
     this.#measurement = null;
   }

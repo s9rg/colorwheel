@@ -457,13 +457,14 @@ export function createColorwheelComponent<Metadata extends object = JsonObject>(
       let mountedLegacyController: PickerController<Metadata> | undefined;
       const legacyRenderRoots = new Set<HTMLElement>();
 
-      function pruneRemovedEditState(next: PickerState<Metadata>, meta: ChangeMeta): void {
-        const colorIds = new Set(next.palette.colors.map((entry) => entry.id));
+      function pruneEditState(next: PickerState<Metadata>, meta: ChangeMeta): void {
+        const colorsById = new Map(next.palette.colors.map((entry) => [entry.id, entry]));
         for (const id of Object.keys(drafts)) {
-          if (!colorIds.has(id)) delete drafts[id];
+          const entry = colorsById.get(id);
+          if (entry === undefined || drafts[id].source !== toHex(entry)) delete drafts[id];
         }
         for (const [id, interaction] of nameInteractions) {
-          if (colorIds.has(id)) continue;
+          if (colorsById.has(id)) continue;
           nameInteractions.delete(id);
           if (meta.origin !== "external") interaction.commit();
         }
@@ -510,7 +511,7 @@ export function createColorwheelComponent<Metadata extends object = JsonObject>(
             const paletteChanged = previousPalette !== next.palette;
             previousPalette = next.palette;
             state.value = next;
-            pruneRemovedEditState(next, meta);
+            pruneEditState(next, meta);
             emitChange(next, meta, paletteChanged);
           }
         );
@@ -1146,7 +1147,7 @@ export function createColorwheelComponent<Metadata extends object = JsonObject>(
               type: "button",
               "data-part": "swatch",
               "data-color-id": entry.id,
-              "aria-label": `Select ${label}, ${source}`,
+              "aria-label": `Select ${label}, ${source}${entry.id === current.anchorColorId ? ", anchor color" : ""}`,
               "aria-pressed": entry.id === current.activeColorId,
               onClick: () =>
                 currentController.value.commands.setActive(entry.id, {

@@ -35,7 +35,7 @@ function expectNoPageErrors(errors: readonly string[]): void {
   expect(errors, `Unexpected uncaught page errors:\n${errors.join("\n\n")}`).toEqual([]);
 }
 
-test.describe("published-package consumer runtimes", () => {
+test.describe("packed or published package consumer runtimes", () => {
   test("React composes controlled blocks, reports events, and exports CSS", async ({ page }) => {
     const errors = captureRuntimeErrors(page);
     await openConsumer(page, consumers[0]);

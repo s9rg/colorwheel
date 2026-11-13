@@ -26,6 +26,42 @@ describe("palette documents", () => {
     expect(validatePaletteDocument(document)).toMatchObject({ valid: true });
   });
 
+  it("accounts for the document envelope when creating a document", () => {
+    const palette = testPalette();
+    const byteLimits = { maxDocumentBytes: Buffer.byteLength(JSON.stringify(palette)) };
+    expect(validatePalette(palette, byteLimits).valid).toBe(true);
+    expect(() => createPaletteDocument(palette, byteLimits)).toThrow(
+      PaletteDocumentValidationError
+    );
+
+    expect(validatePalette(palette, { maxDepth: 4 }).valid).toBe(true);
+    expect(() => createPaletteDocument(palette, { maxDepth: 4 })).toThrow(
+      PaletteDocumentValidationError
+    );
+  });
+
+  it("falls back to compact JSON when formatting would exceed the UTF-8 byte limit", () => {
+    const palette = { ...testPalette(), name: "Palette 🎨" };
+    const document = createPaletteDocument(palette);
+    const compact = JSON.stringify(document);
+    const limits = { maxDocumentBytes: Buffer.byteLength(compact) };
+
+    for (const input of [palette, document]) {
+      for (const indentation of [2, 8, "\t"]) {
+        const encoded = serializePaletteDocument(input, indentation, limits);
+        expect(encoded).toBe(compact);
+        expect(parsePaletteDocument(encoded, limits)).toEqual(document);
+      }
+    }
+    expect(() =>
+      serializePaletteDocument(document, 0, { maxDocumentBytes: limits.maxDocumentBytes - 1 })
+    ).toThrow(PaletteDocumentValidationError);
+  });
+
+  it("rejects indentation that would produce invalid JSON", () => {
+    expect(() => serializePaletteDocument(testPalette(), "--")).toThrow(/JSON whitespace/);
+  });
+
   it("accepts empty palettes and duplicate color values", () => {
     const document = createPaletteDocument({
       colors: [],

@@ -1,5 +1,6 @@
 import { resolveColor, srgbChannelToLinear } from "./convert";
 import { assertPalette } from "./document";
+import type { ValidationLimits } from "./document";
 import { isInGamut, mapToGamut, perceptualDistance } from "./gamut";
 import { clamp } from "./math";
 import type {
@@ -244,9 +245,10 @@ function contrastDiagnostics(
 
 export function analyzePalette(
   palette: Palette<object>,
-  options: AnalysisOptions = {}
+  options: AnalysisOptions = {},
+  validationLimits: ValidationLimits = {}
 ): PaletteAnalysis {
-  assertPalette(palette);
+  assertPalette(palette, validationLimits);
   validateAnalysisOptions(options);
   const diagnostics: PaletteDiagnostic[] = [];
   if (options.includeGamut ?? true) {
@@ -261,16 +263,20 @@ export function analyzePalette(
   return { diagnostics };
 }
 
-export const builtInPaletteAnalyzers: readonly PaletteAnalyzer[] = [
+export const createBuiltInPaletteAnalyzers = (
+  validationLimits: ValidationLimits = {}
+): readonly PaletteAnalyzer[] => [
   {
     id: BUILT_IN_ANALYZER_ID,
     version: BUILT_IN_ANALYZER_VERSION,
     analyze(palette, options) {
       // Engine options are validated as finite JSON before reaching the strategy.
-      return analyzePalette(palette, options);
+      return analyzePalette(palette, options, validationLimits);
     }
   }
 ];
+
+export const builtInPaletteAnalyzers = createBuiltInPaletteAnalyzers();
 
 /** Validate one structured color without changing it; useful to strategy authors. */
 export function assertAnalyzableColor(input: ColorInput): void {

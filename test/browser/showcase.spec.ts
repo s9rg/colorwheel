@@ -432,6 +432,28 @@ test("starts with a linked complementary palette and a dependency-free seed pick
   await expect(page.locator('[data-part="diagnostics"]')).toHaveCount(0);
 });
 
+test("preserves seed channels through black and gray endpoints", async ({ page }) => {
+  await openShowcase(page);
+  await page.getByRole("button", { name: /Base color:.*Open color picker/ }).click();
+  const dialog = page.getByRole("dialog", { name: "Base color" });
+  const hex = dialog.getByRole("textbox", { name: "Hex" });
+  await hex.fill("#00cc00");
+  await hex.press("Enter");
+  const brightness = dialog.getByRole("slider", { name: "Brightness" });
+  const saturation = dialog.getByRole("slider", { name: "Saturation" });
+  const hue = dialog.getByRole("slider", { name: "Hue", exact: true });
+  await brightness.focus();
+  await brightness.fill("0");
+  await expect(hue).toHaveValue("120");
+  await expect(saturation).toHaveValue("100");
+  await brightness.fill("80");
+  await expect(page.getByRole("button", { name: /Base color: #00CC00/ })).toBeVisible();
+  await saturation.fill("0");
+  await hue.fill("240");
+  await saturation.fill("100");
+  await expect(page.getByRole("button", { name: /Base color: #0000CC/ })).toBeVisible();
+});
+
 test("switches palette relationships and preserves the selected relationship after a seed edit", async ({
   page
 }) => {

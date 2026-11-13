@@ -191,10 +191,10 @@ Use:
 
 - `validatePalette(value, limits)` for a non-throwing result;
 - `assertPalette(value, limits)` for a typed assertion;
-- `createPaletteDocument(palette)`;
+- `createPaletteDocument(palette, limits?)`;
 - `validatePaletteDocument(value, limits)`;
 - `assertPaletteDocument(value, limits)`;
-- `serializePaletteDocument(paletteOrDocument, indentation)`;
+- `serializePaletteDocument(paletteOrDocument, indentation, limits?)`;
 - `parsePaletteDocument(json, limits)`;
 - `migratePaletteDocument(value)`;
 - `assignPaletteColorIds(colors, prefix)`.
@@ -207,6 +207,13 @@ Validation requires finite JSON values, supported tagged color shapes, unique
 IDs, a recognized envelope, and configured resource limits. Unknown
 application metadata and strategy references are preserved. A document never
 causes code loading or evaluation.
+
+`createPaletteDocument` validates the complete document envelope, including its
+size and nesting depth. Serialization preserves the requested indentation when
+it fits within `maxDocumentBytes`, and falls back to compact JSON when only that
+representation fits. Every successful serialization can be parsed under the same
+limits. String indentation must contain only JSON whitespace (spaces, tabs, and
+line breaks).
 
 ## Analysis
 
@@ -245,9 +252,9 @@ decisions.
 
 Direct helpers:
 
-- `exportPaletteJson(palette, options)`;
-- `exportPaletteCss(palette, options)`;
-- `exportPaletteTokens(palette, options)`.
+- `exportPaletteJson(palette, options, limits?)`;
+- `exportPaletteCss(palette, options, limits?)`;
+- `exportPaletteTokens(palette, options, limits?)`.
 
 Each returns an `ExportArtifact` containing platform-neutral files with a
 name, media type, and `string | Uint8Array` content. Filenames, CSS selectors,
@@ -277,7 +284,13 @@ export under the IDs exposed by `BUILT_IN_IMPORTER_IDS` and
 Built-ins are included by default and implement the same interfaces. Set
 `includeBuiltIns: false` for an empty engine. Duplicate `id@version`
 registrations throw unless `overrideStrategies` is explicitly enabled.
-`validationLimits` applies to palette and document boundaries.
+`validationLimits` applies consistently to palette and document boundaries,
+including built-in generation, import, analysis, and export. Each engine snapshots its
+limits when created. The standalone analysis/export helpers accept limits as
+an optional third argument; `createPaletteDocument` accepts them as its second
+argument and `serializePaletteDocument` as its third. The editor uses the
+default document limits and rejects a mutation before changing state if the
+resulting palette and its document envelope would exceed them.
 
 `ColorEngine` methods:
 

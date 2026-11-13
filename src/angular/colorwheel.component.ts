@@ -1007,7 +1007,7 @@ export class ColorwheelComponent<Metadata extends object = JsonObject>
   }
 
   protected swatchLabel(entry: PaletteColor<Metadata>, index: number): string {
-    return `Select ${colorName(entry, index)}, ${hexColor(entry.color)}`;
+    return `Select ${colorName(entry, index)}, ${hexColor(entry.color)}${entry.id === this.currentState()?.anchorColorId ? ", anchor color" : ""}`;
   }
 
   protected canEdit(entry: PaletteColor<Metadata>): boolean {
@@ -1105,6 +1105,7 @@ export class ColorwheelComponent<Metadata extends object = JsonObject>
 
   protected commitColor(entry: PaletteColor<Metadata>): void {
     const draft = this.draftFor(entry);
+    if (!draft.invalid && draft.value === draft.source) return;
     try {
       const color = parseColor(draft.value);
       const value = hexColor(color);

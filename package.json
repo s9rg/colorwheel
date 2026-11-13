@@ -1,6 +1,6 @@
 {
   "name": "@s9rg/colorwheel",
-  "version": "1.1.0",
+  "version": "1.1.1",
   "description": "A research-informed, customization-first color wheel and palette toolkit",
   "type": "module",
   "main": "./dist/index.cjs",
@@ -210,7 +210,7 @@
     "@axe-core/playwright": "^4.13.0",
     "@babel/core": "^7.29.7",
     "@eslint/js": "^10.0.0",
-    "@playwright/test": "^1.62.1",
+    "@playwright/test": "1.62.1",
     "@s9rg/theme-adapter-angular-material": "0.6.0",
     "@s9rg/theme-adapter-antd": "0.6.0",
     "@s9rg/theme-adapter-css": "0.6.0",
@@ -232,7 +232,7 @@
     "@types/react-dom": "^19.0.0",
     "@vitejs/plugin-react": "^6.1.0",
     "@vitest/coverage-v8": "^4.1.11",
-    "@vue/test-utils": "^2.4.11",
+    "@vue/test-utils": "2.4.11",
     "eslint": "^10.9.0",
     "eslint-plugin-react-hooks": "^7.1.1",
     "eslint-plugin-react-refresh": "^0.5.4",
@@ -256,13 +256,15 @@
     "vue": "^3.5.41"
   },
   "overrides": {
-    "esbuild": "^0.28.1"
+    "esbuild": "^0.28.1",
+    "glob@>=9 <14.0.2": "^14.0.6",
+    "minimatch@>=7 <11.0.1": "^11.0.8"
   },
   "size-limit": [
     {
       "name": "Core",
       "path": "dist/core/index.js",
-      "limit": "13 kB"
+      "limit": "13.1 kB"
     },
     {
       "name": "Headless editor",

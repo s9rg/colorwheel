@@ -93,7 +93,11 @@ export function SeedColorPicker({
   const planeHelpId = useId();
   const hexErrorId = useId();
   const resolved = useMemo(() => resolveColor(value), [value]);
-  const { hsv } = resolved;
+  const [editing, setEditing] = useState(resolved);
+  // Hex cannot retain hue at gray or hue/saturation at black. Keep the authored
+  // channels while the parent accepts this color; unrelated colors replace them.
+  const hsv = editing.hex === resolved.hex ? editing.hsv : resolved.hsv;
+  if (editing.hex !== resolved.hex) setEditing(resolved);
   const displayHex = resolved.hex.toUpperCase();
 
   useEffect(() => {
@@ -162,14 +166,15 @@ export function SeedColorPicker({
   }, [isOpen]);
 
   const emitHsv = (next: HsvColor): void => {
-    onChange(
-      toHex({
-        ...next,
-        h: normalizeHue(next.h),
-        s: clamp(next.s),
-        v: clamp(next.v)
-      })
-    );
+    const normalized: HsvColor = {
+      ...next,
+      h: normalizeHue(next.h),
+      s: clamp(next.s),
+      v: clamp(next.v)
+    };
+    const hex = toHex(normalized);
+    setEditing({ hex, hsv: normalized });
+    onChange(hex);
   };
 
   const updateFromPlane = (event: ReactPointerEvent<HTMLDivElement>): void => {
@@ -245,6 +250,9 @@ export function SeedColorPicker({
         mapToSrgb: true
       });
       setHexError(null);
+      if (nextHex !== resolved.hex) {
+        setEditing({ hex: nextHex, hsv: convertColor(nextHex, "hsv") });
+      }
       onChange(nextHex);
       return nextHex;
     } catch {

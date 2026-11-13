@@ -245,9 +245,9 @@ function detachRecipe<Metadata extends object>(
   palette: Palette<Metadata>,
   colors: readonly PaletteColor<Metadata>[]
 ): Palette<Metadata> {
-  if (palette.recipe === undefined) return { ...palette, colors };
   const withoutRecipe = { ...palette, colors };
   Reflect.deleteProperty(withoutRecipe, "recipe");
+  assertRuntimePalette<Metadata>(withoutRecipe);
   return withoutRecipe;
 }
 
@@ -255,7 +255,9 @@ function withColors<Metadata extends object>(
   palette: Palette<Metadata>,
   colors: readonly PaletteColor<Metadata>[]
 ): Palette<Metadata> {
-  return { ...palette, colors };
+  const candidate = { ...palette, colors };
+  assertRuntimePalette<Metadata>(candidate);
+  return candidate;
 }
 
 function reconcileSelection<Metadata extends object>(

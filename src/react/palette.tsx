@@ -69,6 +69,7 @@ export function PaletteSwatch<Metadata extends object = JsonObject>({
   const inputId = useId();
   const draft = edit.source === source ? edit.value : source;
   const invalid = edit.source === source && edit.invalid;
+  if (edit.source !== source) setEdit({ source, value: source, invalid: false });
 
   useEffect(() => {
     const unsubscribe = controller.subscribe(
@@ -343,7 +344,7 @@ export function PaletteBlock<Metadata extends object = JsonObject>({
                   type: "button",
                   "data-part": "swatch",
                   "data-color-id": entry.id,
-                  "aria-label": `Select ${colorLabel(entry, index)}, ${toHex(entry)}`,
+                  "aria-label": `Select ${colorLabel(entry, index)}, ${toHex(entry)}${entry.id === state.anchorColorId ? ", anchor color" : ""}`,
                   "aria-pressed": entry.id === state.activeColorId,
                   onClick: () =>
                     controller.commands.setActive(entry.id, {
