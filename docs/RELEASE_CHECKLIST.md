@@ -93,7 +93,7 @@ compile successfully, the Pages build verifies their third-party notices, and
 `npm audit` reports zero vulnerabilities.
 
 Local 1.1.1 evidence recorded 2026-11-13 with Node 22.14.0 and npm 10.9.2:
-The integrated suite passes 336 unit/property/adapter/demo tests, all coverage
+The integrated suite passes 338 unit/property/adapter/demo tests, all coverage
 thresholds, formatting, lint, type checks, library/demo builds, and all seven
 bundle budgets. Root and consumer-lab dependency audits report zero
 vulnerabilities. Independent follow-up review covered the core boundaries,
